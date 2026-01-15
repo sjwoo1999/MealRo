@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { FoodData, FoodAnalysisResponse } from '@/types/food';
 import { getAnonymousUserId } from '@/lib/userId';
 import { compressImage, formatFileSize } from '@/lib/image-compress';
@@ -12,6 +12,50 @@ interface FoodScannerProps {
     onAnalysisComplete?: (data: AnalyzedData) => void;
     onSave?: (data: AnalyzedData) => void;
 }
+
+// Internal component for Typewriter effect
+const TypewriterMessage = ({ messages }: { messages: string[] }) => {
+    const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+    const [currentText, setCurrentText] = useState('');
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    useEffect(() => {
+        const typeSpeed = 50;
+        const deleteSpeed = 30;
+        const pauseTime = 2000;
+
+        const handleTyping = () => {
+            const fullMessage = messages[currentMessageIndex];
+
+            if (!isDeleting) {
+                // Typing
+                setCurrentText(fullMessage.substring(0, currentText.length + 1));
+
+                if (currentText.length === fullMessage.length) {
+                    setTimeout(() => setIsDeleting(true), pauseTime);
+                }
+            } else {
+                // Deleting
+                setCurrentText(fullMessage.substring(0, currentText.length - 1));
+
+                if (currentText.length === 0) {
+                    setIsDeleting(false);
+                    setCurrentMessageIndex((prev) => (prev + 1) % messages.length);
+                }
+            }
+        };
+
+        const timer = setTimeout(handleTyping, isDeleting ? deleteSpeed : typeSpeed);
+        return () => clearTimeout(timer);
+    }, [currentText, isDeleting, currentMessageIndex, messages]);
+
+    return (
+        <span className="inline-block min-h-[1.5em] align-bottom">
+            {currentText}
+            <span className="animate-pulse ml-0.5 border-r-2 border-current h-[1.2em] inline-block align-middle"></span>
+        </span>
+    );
+};
 
 export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerProps) {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -202,9 +246,22 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                                     <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 animate-gradient-text">
                                         {isCompressing ? 'Optimizing Image...' : 'Analyzing Food...'}
                                     </h3>
-                                    <p className="text-sm text-slate-500 dark:text-slate-400 font-medium px-8 animate-pulse">
-                                        {isCompressing ? '더 선명한 분석을 위해 다듬고 있어요' : 'AI가 맛있는 정보를 읽어내고 있습니다'}
-                                    </p>
+                                    <div className="text-sm text-slate-600 dark:text-slate-300 font-medium px-8 min-h-[40px] flex items-center justify-center">
+                                        {isCompressing ? (
+                                            <p className="animate-pulse">더 선명한 분석을 위해 다듬고 있어요 ✂️</p>
+                                        ) : (
+                                            <TypewriterMessage
+                                                messages={[
+                                                    "AI가 맛있는 냄새를 맡고 있습니다... 👃",
+                                                    "칼로리를 계산하느라 머리를 굴리는 중... 🤯",
+                                                    "이 음식, 정말 맛있어 보이네요! 😋",
+                                                    "영양 성분을 꼼꼼히 체크하고 있어요 🔍",
+                                                    "잠시만요, 셰프에게 물어보는 중입니다... 👨‍🍳",
+                                                    "거의 다 됐어요! 비주얼이 훌륭하네요 ✨"
+                                                ]}
+                                            />
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -248,8 +305,8 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                     <button
                         onClick={resetScanner}
                         className="w-full py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 
-                            text-slate-700 dark:text-slate-300 font-medium
-                            hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                    text-slate-700 dark:text-slate-300 font-medium
+                                    hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                     >
                         다른 사진 분석하기
                     </button>
