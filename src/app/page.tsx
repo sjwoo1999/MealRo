@@ -30,6 +30,23 @@ export default function HomePage() {
                     <span>끼니 추천 받기</span>
                     <span aria-hidden="true">→</span>
                 </Link>
+
+                {/* Scan Button */}
+                <div className="mt-4">
+                    <Link
+                        href="/scan"
+                        className="
+                inline-flex items-center gap-2
+                px-6 py-3 border-2 border-primary-500 text-primary-600 dark:text-primary-400 font-medium
+                rounded-xl hover:bg-primary-50 dark:hover:bg-primary-900/20
+                transition-all duration-200
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2
+              "
+                    >
+                        <span>📸</span>
+                        <span>AI로 음식 스캔하기</span>
+                    </Link>
+                </div>
             </section>
 
             {/* Features */}

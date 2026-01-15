@@ -1,0 +1,52 @@
+import { Metadata } from 'next';
+import FoodScanner from '@/components/FoodScanner';
+import Link from 'next/link';
+
+export const metadata: Metadata = {
+    title: '음식 스캔 - MealRo',
+    description: 'AI로 음식 사진을 분석하고 영양 정보를 확인하세요',
+};
+
+export default function ScanPage() {
+    return (
+        <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
+            <div className="max-w-md mx-auto px-4 py-6">
+                {/* Header */}
+                <header className="mb-6">
+                    <Link
+                        href="/"
+                        className="inline-flex items-center gap-1 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 mb-4"
+                    >
+                        ← 홈으로
+                    </Link>
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                        📸 음식 스캔
+                    </h1>
+                    <p className="text-slate-600 dark:text-slate-400 mt-1">
+                        AI가 음식 사진을 분석하여 영양 정보를 알려드려요
+                    </p>
+                </header>
+
+                {/* Scanner Component */}
+                <FoodScanner />
+
+                {/* Info */}
+                <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                    <h3 className="font-medium text-blue-900 dark:text-blue-300 flex items-center gap-2">
+                        <span>💡</span> 사용 팁
+                    </h3>
+                    <ul className="mt-2 text-sm text-blue-700 dark:text-blue-400 space-y-1">
+                        <li>• 음식이 잘 보이도록 밝은 곳에서 촬영하세요</li>
+                        <li>• 여러 음식이 있으면 모두 인식됩니다</li>
+                        <li>• 영양 정보는 추정치이며 실제와 다를 수 있습니다</li>
+                    </ul>
+                </div>
+
+                {/* Disclaimer */}
+                <p className="mt-6 text-xs text-slate-400 dark:text-slate-500 text-center">
+                    * AI 분석 결과는 참고용이며, 정확한 영양 정보는 제품 라벨을 확인하세요.
+                </p>
+            </div>
+        </main>
+    );
+}
