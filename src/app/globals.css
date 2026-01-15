@@ -57,4 +57,41 @@ body {
             opacity: 0.8;
         }
     }
+
+    @keyframes gradient-spin {
+        0% {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+
+    @keyframes border-spin {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .animate-gradient-text {
+        background-size: 200% 200%;
+        animation: gradient-spin 3s ease infinite;
+    }
+
+    .gemini-loader-mask {
+        mask-image: linear-gradient(transparent, transparent), linear-gradient(#fff, #fff);
+        mask-clip: padding-box, border-box;
+        mask-composite: intersect;
+        -webkit-mask-composite: source-in, xor;
+        /* for Safari support might need adjustment or simpler approach */
+    }
 }

@@ -180,34 +180,29 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                             className="w-full max-h-64 object-contain"
                         />
 
-                        {/* Compressing/Analyzing Overlay - Premium Design */}
+                        {/* Compressing/Analyzing Overlay - Gemini Style */}
                         {(isCompressing || isAnalyzing) && (
-                            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300">
-                                <div className="relative flex flex-col items-center p-6 rounded-2xl bg-white/10 border border-white/20 shadow-2xl backdrop-blur-md">
-                                    {/* Animated Spinner Container */}
-                                    <div className="relative w-16 h-16 mb-4">
-                                        {/* Outer Ring */}
-                                        <div className="absolute inset-0 border-4 border-t-white/90 border-r-white/30 border-b-white/10 border-l-white/30 rounded-full animate-spin"></div>
-                                        {/* Inner Ring (Reverse Spin) */}
-                                        <div className="absolute inset-2 border-4 border-b-primary-400 border-l-primary-200 border-t-transparent border-r-transparent rounded-full animate-spin-reverse opacity-90"></div>
-                                        {/* Center Icon */}
-                                        <div className="absolute inset-0 flex items-center justify-center text-2xl animate-pulse">
-                                            {isCompressing ? '⚡' : '✨'}
+                            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 dark:bg-black/80 backdrop-blur-md transition-all duration-300">
+                                <div className="relative p-[2px] rounded-full overflow-hidden">
+                                    {/* Rotating Gradient Border */}
+                                    <div className="absolute inset-0 bg-[conic-gradient(from_0deg,transparent_0deg,#3b82f6_180deg,#8b5cf6_270deg,#3b82f6_360deg)] animate-[spin_2s_linear_infinite]" />
+
+                                    {/* Inner Circle content */}
+                                    <div className="relative bg-white dark:bg-slate-900 rounded-full w-24 h-24 flex items-center justify-center z-10">
+                                        <div className="text-4xl animate-pulse">
+                                            {isCompressing ? '✨' : '🤖'}
                                         </div>
                                     </div>
+                                </div>
 
-                                    {/* Text Content */}
-                                    <div className="text-center space-y-1">
-                                        <p className="text-lg font-bold text-white tracking-wide animate-pulse-subtle">
-                                            {isCompressing ? 'Optimization' : 'Analyzing'}
-                                        </p>
-                                        <p className="text-sm font-medium text-white/90">
-                                            {isCompressing ? '이미지 최적화 중...' : 'AI가 분석하는 중...'}
-                                        </p>
-                                        <p className="text-xs text-white/60">
-                                            {isCompressing ? '더 빠른 분석을 위해!' : '잠시만 기다려주세요'}
-                                        </p>
-                                    </div>
+                                {/* Text Content */}
+                                <div className="mt-6 text-center space-y-2">
+                                    <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 animate-gradient-text">
+                                        {isCompressing ? 'Optimizing...' : 'Generating Analysis'}
+                                    </h3>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+                                        {isCompressing ? '최상의 결과를 위해 준비중입니다' : 'AI가 영양 정보를 분석하고 있습니다'}
+                                    </p>
                                 </div>
                             </div>
                         )}
