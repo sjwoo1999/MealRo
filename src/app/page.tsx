@@ -32,7 +32,7 @@ export default function HomePage() {
                 </Link>
 
                 {/* Scan Button */}
-                <div className="mt-4">
+                <div className="mt-4 flex gap-3 justify-center">
                     <Link
                         href="/scan"
                         className="
@@ -44,7 +44,20 @@ export default function HomePage() {
               "
                     >
                         <span>📸</span>
-                        <span>AI로 음식 스캔하기</span>
+                        <span>음식 스캔</span>
+                    </Link>
+                    <Link
+                        href="/history"
+                        className="
+                inline-flex items-center gap-2
+                px-6 py-3 border-2 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 font-medium
+                rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800
+                transition-all duration-200
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2
+              "
+                    >
+                        <span>📊</span>
+                        <span>식사 기록</span>
                     </Link>
                 </div>
             </section>
