@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { analyzeFoodImage } from '@/lib/food-analyzer';
+import { analyzeFoodImageWithOpenAI } from '@/lib/openai-analyzer';
 import { FoodAnalysisErrorCode } from '@/types/food';
 import { createClient } from '@supabase/supabase-js';
 
@@ -64,8 +64,8 @@ export async function POST(request: NextRequest) {
         const arrayBuffer = await file.arrayBuffer();
         const base64 = Buffer.from(arrayBuffer).toString('base64');
 
-        // Analyze image with Gemini
-        const result = await analyzeFoodImage(base64, file.type);
+        // Analyze image with OpenAI GPT-4.1-nano
+        const result = await analyzeFoodImageWithOpenAI(base64, file.type);
 
         // Log to database if successful
         if (result.success && anonymousUserId) {
