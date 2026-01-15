@@ -180,19 +180,34 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                             className="w-full max-h-64 object-contain"
                         />
 
-                        {/* Compressing/Analyzing Overlay */}
+                        {/* Compressing/Analyzing Overlay - Premium Design */}
                         {(isCompressing || isAnalyzing) && (
-                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                <div className="text-center text-white">
-                                    <div className="animate-spin text-4xl mb-2">
-                                        {isCompressing ? '🗜️' : '🔍'}
+                            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300">
+                                <div className="relative flex flex-col items-center p-6 rounded-2xl bg-white/10 border border-white/20 shadow-2xl backdrop-blur-md">
+                                    {/* Animated Spinner Container */}
+                                    <div className="relative w-16 h-16 mb-4">
+                                        {/* Outer Ring */}
+                                        <div className="absolute inset-0 border-4 border-t-white/90 border-r-white/30 border-b-white/10 border-l-white/30 rounded-full animate-spin"></div>
+                                        {/* Inner Ring (Reverse Spin) */}
+                                        <div className="absolute inset-2 border-4 border-b-primary-400 border-l-primary-200 border-t-transparent border-r-transparent rounded-full animate-spin-reverse opacity-90"></div>
+                                        {/* Center Icon */}
+                                        <div className="absolute inset-0 flex items-center justify-center text-2xl animate-pulse">
+                                            {isCompressing ? '⚡' : '✨'}
+                                        </div>
                                     </div>
-                                    <p className="font-medium">
-                                        {isCompressing ? '이미지 압축 중...' : 'AI가 음식을 분석 중...'}
-                                    </p>
-                                    <p className="text-sm text-white/70 mt-1">
-                                        {isCompressing ? '업로드 최적화' : '한국 음식 전문 분석'}
-                                    </p>
+
+                                    {/* Text Content */}
+                                    <div className="text-center space-y-1">
+                                        <p className="text-lg font-bold text-white tracking-wide animate-pulse-subtle">
+                                            {isCompressing ? 'Optimization' : 'Analyzing'}
+                                        </p>
+                                        <p className="text-sm font-medium text-white/90">
+                                            {isCompressing ? '이미지 최적화 중...' : 'AI가 분석하는 중...'}
+                                        </p>
+                                        <p className="text-xs text-white/60">
+                                            {isCompressing ? '더 빠른 분석을 위해!' : '잠시만 기다려주세요'}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         )}
