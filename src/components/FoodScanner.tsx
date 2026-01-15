@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import { RecognizedFood, ImageAnalysisResult } from '@/lib/gemini';
+import { RecognizedFood, ImageAnalysisResult } from '@/lib/gemini-legacy';
 import { getAnonymousUserId } from '@/lib/userId';
 
 interface FoodScannerProps {

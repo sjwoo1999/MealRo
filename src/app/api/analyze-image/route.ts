@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { analyzeImage, ImageAnalysisResult } from '@/lib/gemini';
+import { analyzeImage, ImageAnalysisResult } from '@/lib/gemini-legacy';
 import { createClient } from '@supabase/supabase-js';
 
 // Create Supabase client for logging
