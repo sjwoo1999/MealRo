@@ -7,7 +7,10 @@ const openai = new OpenAI({
 });
 
 // Korean food specialist prompt
-const KOREAN_FOOD_ANALYSIS_PROMPT = `당신은 한국 음식 전문 영양사입니다. 사용자가 제공하는 음식 사진을 분석하여 정확한 영양 정보를 제공합니다.
+const KOREAN_FOOD_ANALYSIS_PROMPT = `당신은 한국 음식 전문 영양사입니다. 사용자가 제공하는 음식 사진을 분석하여 영양 정보를 제공합니다.
+
+사진이 흐릿하거나 음식이 작게 보여도 최대한 분석을 시도하세요.
+음식이 아닌 것이 확실한 경우에만 에러를 반환하세요.
 
 이 음식 사진을 분석해주세요. 반드시 아래 JSON 형식으로만 응답하세요.
 
@@ -33,18 +36,14 @@ const KOREAN_FOOD_ANALYSIS_PROMPT = `당신은 한국 음식 전문 영양사입
 **여러 음식이 보이는 경우:**
 {
   "foods": [
-    { /* 위와 동일한 형식으로 각 음식을 분석 */ },
-    { /* 두 번째 음식 */ }
+    { /* 위와 동일한 형식으로 각 음식을 분석 */ }
   ]
 }
 
 주의사항:
-- 반드시 JSON만 출력하세요. 마크다운 코드블록이나 다른 텍스트 없이 순수 JSON만.
-- 한국 음식 기준으로 분석하세요.
+- 반드시 JSON만 출력하세요.
 - 영양정보는 1인분 기준입니다.
-- 확신이 낮으면 confidence를 낮게 설정하세요 (0.5 이하).
-- 음식이 아니거나 인식할 수 없으면 {"error": "UNRECOGNIZED_FOOD"} 반환.
-- 여러 음식이 있으면 반드시 foods 배열로 각각 분석하세요.`;
+- 음식이 아닌 것이 *확실할 때만* {"error": "UNRECOGNIZED_FOOD"} 반환.`;
 
 export async function analyzeFoodImageWithOpenAI(
     imageBase64: string,
@@ -55,7 +54,7 @@ export async function analyzeFoodImageWithOpenAI(
     try {
         // Use OpenAI Responses API with vision
         const response = await openai.responses.create({
-            model: 'gpt-4.1-nano', // Most cost-effective vision model
+            model: 'gpt-5-nano', // Using the latest nano model
             input: [
                 {
                     role: 'user',
