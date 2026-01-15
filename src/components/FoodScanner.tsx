@@ -180,28 +180,30 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                             className="w-full max-h-64 object-contain"
                         />
 
-                        {/* Compressing/Analyzing Overlay - Gemini Style */}
+                        {/* Compressing/Analyzing Overlay - Premium Liquid Gradient Style */}
                         {(isCompressing || isAnalyzing) && (
-                            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 dark:bg-black/80 backdrop-blur-md transition-all duration-300">
-                                <div className="relative p-[2px] rounded-full overflow-hidden">
-                                    {/* Rotating Gradient Border */}
-                                    <div className="absolute inset-0 bg-[conic-gradient(from_0deg,transparent_0deg,#3b82f6_180deg,#8b5cf6_270deg,#3b82f6_360deg)] animate-[spin_2s_linear_infinite]" />
+                            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/90 dark:bg-black/90 backdrop-blur-xl transition-all duration-500">
+                                {/* Liquid Gradient Orb */}
+                                <div className="relative w-40 h-40">
+                                    <div className="absolute top-0 -left-4 w-32 h-32 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+                                    <div className="absolute top-0 -right-4 w-32 h-32 bg-cyan-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+                                    <div className="absolute -bottom-8 left-10 w-32 h-32 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
 
-                                    {/* Inner Circle content */}
-                                    <div className="relative bg-white dark:bg-slate-900 rounded-full w-24 h-24 flex items-center justify-center z-10">
-                                        <div className="text-4xl animate-pulse">
-                                            {isCompressing ? '✨' : '🤖'}
+                                    {/* Central White/Dark Core to make it look like a ring/orb */}
+                                    <div className="absolute inset-4 bg-white/30 dark:bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 shadow-inner">
+                                        <div className="text-3xl animate-pulse text-white drop-shadow-lg">
+                                            {isCompressing ? '⚡' : '✨'}
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Text Content */}
-                                <div className="mt-6 text-center space-y-2">
-                                    <h3 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 animate-gradient-text">
-                                        {isCompressing ? 'Optimizing...' : 'Generating Analysis'}
+                                <div className="mt-8 text-center space-y-3 z-20">
+                                    <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 animate-gradient-text">
+                                        {isCompressing ? 'Optimizing Image...' : 'Analyzing Food...'}
                                     </h3>
-                                    <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-                                        {isCompressing ? '최상의 결과를 위해 준비중입니다' : 'AI가 영양 정보를 분석하고 있습니다'}
+                                    <p className="text-sm text-slate-500 dark:text-slate-400 font-medium px-8 animate-pulse">
+                                        {isCompressing ? '더 선명한 분석을 위해 다듬고 있어요' : 'AI가 맛있는 정보를 읽어내고 있습니다'}
                                     </p>
                                 </div>
                             </div>
