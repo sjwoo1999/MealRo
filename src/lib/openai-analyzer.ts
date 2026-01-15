@@ -74,6 +74,22 @@ export async function analyzeFoodImageWithOpenAI(
         // Extract output text from response
         const text = (response as { output_text?: string }).output_text || '';
 
+        // Debug logging
+        console.log('OpenAI Response received:', JSON.stringify(response).substring(0, 500));
+        console.log('Output text:', text.substring(0, 300));
+
+        // If empty response, return error
+        if (!text || text.trim() === '') {
+            console.error('Empty response from OpenAI');
+            return {
+                success: false,
+                error: {
+                    code: FoodAnalysisErrorCode.API_ERROR,
+                    message: 'AI 응답이 비어있습니다. 다시 시도해주세요.',
+                },
+            };
+        }
+
         // Parse JSON response
         let parsedResponse;
         try {
