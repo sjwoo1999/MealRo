@@ -149,7 +149,6 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                         ref={fileInputRef}
                         type="file"
                         accept="image/jpeg,image/png,image/webp,image/heic"
-                        capture="environment"
                         onChange={handleInputChange}
                         className="hidden"
                     />
