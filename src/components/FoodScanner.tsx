@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { FoodData, FoodAnalysisResponse } from '@/types/food';
 import { getAnonymousUserId } from '@/lib/userId';
+import { compressImage, formatFileSize } from '@/lib/image-compress';
 import AnalysisResult from '@/components/food/AnalysisResult';
 
 type AnalyzedData = FoodData | { foods: FoodData[] };
@@ -14,27 +15,46 @@ interface FoodScannerProps {
 
 export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerProps) {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [isCompressing, setIsCompressing] = useState(false);
     const [analyzedData, setAnalyzedData] = useState<AnalyzedData | null>(null);
     const [processingTime, setProcessingTime] = useState<number>(0);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [dragActive, setDragActive] = useState(false);
+    const [compressionInfo, setCompressionInfo] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFile = useCallback(async (file: File) => {
         setError(null);
         setAnalyzedData(null);
+        setCompressionInfo(null);
 
         // Create preview
         const objectUrl = URL.createObjectURL(file);
         setPreviewUrl(objectUrl);
+
+        // Compress image if needed
+        setIsCompressing(true);
+        let processedFile = file;
+        try {
+            const originalSize = file.size;
+            processedFile = await compressImage(file);
+            const newSize = processedFile.size;
+
+            if (newSize < originalSize) {
+                setCompressionInfo(`${formatFileSize(originalSize)} → ${formatFileSize(newSize)}`);
+            }
+        } catch {
+            console.warn('Image compression failed, using original');
+        }
+        setIsCompressing(false);
 
         // Start analysis
         setIsAnalyzing(true);
 
         try {
             const formData = new FormData();
-            formData.append('image', file);
+            formData.append('image', processedFile);
             formData.append('user_id', getAnonymousUserId());
 
             // Use new API endpoint
@@ -161,14 +181,27 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                             className="w-full max-h-64 object-contain"
                         />
 
-                        {/* Analyzing Overlay */}
-                        {isAnalyzing && (
+                        {/* Compressing/Analyzing Overlay */}
+                        {(isCompressing || isAnalyzing) && (
                             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                                 <div className="text-center text-white">
-                                    <div className="animate-spin text-4xl mb-2">🔍</div>
-                                    <p className="font-medium">AI가 음식을 분석 중...</p>
-                                    <p className="text-sm text-white/70 mt-1">한국 음식 전문 분석</p>
+                                    <div className="animate-spin text-4xl mb-2">
+                                        {isCompressing ? '🗜️' : '🔍'}
+                                    </div>
+                                    <p className="font-medium">
+                                        {isCompressing ? '이미지 압축 중...' : 'AI가 음식을 분석 중...'}
+                                    </p>
+                                    <p className="text-sm text-white/70 mt-1">
+                                        {isCompressing ? '업로드 최적화' : '한국 음식 전문 분석'}
+                                    </p>
                                 </div>
+                            </div>
+                        )}
+
+                        {/* Compression Info Badge */}
+                        {compressionInfo && !isCompressing && !isAnalyzing && (
+                            <div className="absolute bottom-2 right-2 px-2 py-1 bg-green-500/80 text-white text-xs rounded-full">
+                                📦 {compressionInfo}
                             </div>
                         )}
                     </div>
