@@ -19,10 +19,15 @@ export default function ScanPage() {
                     >
                         ← 홈으로
                     </Link>
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                        📸 음식 스캔
-                    </h1>
-                    <p className="text-slate-600 dark:text-slate-400 mt-1">
+                    <div className="flex items-center gap-3 mb-1">
+                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                            📸 음식 스캔
+                        </h1>
+                        <span className="px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-300 rounded-full border border-violet-200 dark:border-violet-800">
+                            Powered by Gen AI
+                        </span>
+                    </div>
+                    <p className="text-slate-600 dark:text-slate-400">
                         AI가 음식 사진을 분석하여 영양 정보를 알려드려요
                     </p>
                 </header>
@@ -54,8 +59,10 @@ export default function ScanPage() {
                 </div>
 
                 {/* Disclaimer */}
-                <p className="mt-6 text-xs text-slate-400 dark:text-slate-500 text-center">
-                    * AI 분석 결과는 참고용이며, 정확한 영양 정보는 제품 라벨을 확인하세요.
+                <p className="mt-6 text-xs text-slate-400 dark:text-slate-500 text-center leading-relaxed">
+                    * 본 결과는 <strong>생성형 인공지능</strong>에 의해 생성되었으며, 실제와 다를 수 있습니다.
+                    <br />
+                    정확한 영양 정보는 제품 라벨을 확인하세요.
                 </p>
             </div>
         </main>

@@ -205,6 +205,11 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                         <p className="text-sm text-slate-500 dark:text-slate-400">
                             드래그 앤 드롭 또는 클릭하여 선택
                         </p>
+                        <div className="pt-2">
+                            <span className="inline-block px-3 py-1 bg-violet-50 text-violet-600 dark:bg-violet-900/20 dark:text-violet-300 text-xs rounded-full border border-violet-100 dark:border-violet-800">
+                                ✨ 생성형 인공지능이 분석합니다
+                            </span>
+                        </div>
                         <p className="text-xs text-slate-400">
                             지원 형식: JPEG, PNG, WebP, HEIC (최대 10MB)
                         </p>
