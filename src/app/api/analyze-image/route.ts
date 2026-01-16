@@ -50,35 +50,12 @@ export async function POST(request: NextRequest) {
         // Analyze image with OpenAI (GPT-4o)
         const result = await analyzeFoodImageWithOpenAI(base64, file.type);
 
-        // Log to database if successful
-        if (result.success && result.data && anonymousUserId) {
-            try {
-                // Normalize to array for logging
-                const foods: FoodData[] = 'foods' in result.data ? (result.data as { foods: FoodData[] }).foods : [result.data as FoodData];
-
-                // Calculate totals for logging
-                const totals = foods.reduce((acc, food) => ({
-                    calories: acc.calories + (food.nutrition.calories || 0),
-                    protein: acc.protein + (food.nutrition.protein || 0),
-                    carbs: acc.carbs + (food.nutrition.carbohydrates || 0),
-                    fat: acc.fat + (food.nutrition.fat || 0),
-                }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
-
-                await supabase.from('image_analysis_logs').insert({
-                    anonymous_user_id: anonymousUserId,
-                    image_hash: imageHash,
-                    recognized_foods: foods,
-                    confidence_scores: Object.fromEntries(
-                        foods.map((f: FoodData) => [f.food_name, f.confidence])
-                    ),
-                    estimated_nutrition: totals,
-                    gemini_response_raw: null, // No longer using Gemini raw text
-                    processing_time_ms: result.processing_time_ms,
-                });
-            } catch (logError) {
-                console.error('Failed to log image analysis:', logError);
-                // Don't fail the request if logging fails
-            }
+        // Return result with image hash (Logging is now deferred to confirmation)
+        if (result.success) {
+            return NextResponse.json({
+                ...result,
+                image_hash: imageHash,
+            });
         }
 
         return NextResponse.json(result);

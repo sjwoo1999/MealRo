@@ -1,12 +1,17 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { FoodData, FoodAnalysisResponse } from '@/types/food';
+import { FoodData, FoodAnalysisResponse, needsVerification, hasMultipleFoods } from '@/types/food';
 import { getAnonymousUserId } from '@/lib/userId';
 import { compressImage, formatFileSize } from '@/lib/image-compress';
 import AnalysisResult from '@/components/food/AnalysisResult';
+import CandidateSelector from '@/components/CandidateSelector';
+import SimpleSnackbar from '@/components/SimpleSnackbar';
 
 type AnalyzedData = FoodData | { foods: FoodData[] };
+
+// Helper type for safely accessing candidate
+type Candidate = NonNullable<FoodData['candidates']>[number];
 
 interface FoodScannerProps {
     onAnalysisComplete?: (data: AnalyzedData) => void;
@@ -66,12 +71,22 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
     const [error, setError] = useState<string | null>(null);
     const [dragActive, setDragActive] = useState(false);
     const [compressionInfo, setCompressionInfo] = useState<string | null>(null);
+
+    // New State for Multi-Candidate & Confirmation
+    const [imageHash, setImageHash] = useState<string | null>(null);
+    const [showCandidates, setShowCandidates] = useState(false);
+    const [isPublic, setIsPublic] = useState(false);
+    const [message, setMessage] = useState<string | null>(null); // For Snackbar
+
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFile = useCallback(async (file: File) => {
         setError(null);
         setAnalyzedData(null);
         setCompressionInfo(null);
+        setImageHash(null);
+        setShowCandidates(false);
+        setIsPublic(false);
 
         // Create preview
         const objectUrl = URL.createObjectURL(file);
@@ -99,10 +114,10 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
         try {
             const formData = new FormData();
             formData.append('image', processedFile);
-            formData.append('user_id', getAnonymousUserId());
+            formData.append('anonymousUserId', getAnonymousUserId()); // Ensure this matches API expectation
 
             // Use new API endpoint
-            const response = await fetch('/api/food/analyze', {
+            const response = await fetch('/api/analyze-image', { // Changed to analyze-image based on context
                 method: 'POST',
                 body: formData,
             });
@@ -115,6 +130,20 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
 
             setAnalyzedData(data.data);
             setProcessingTime(data.processing_time_ms);
+
+            // Set image hash for confirmation
+            if (data.image_hash) {
+                setImageHash(data.image_hash);
+            }
+
+            // Check if we need to show candidates (Low Confidence)
+            // Only apply to single food for now
+            if (!hasMultipleFoods(data.data)) {
+                if (needsVerification(data.data.confidence)) {
+                    setShowCandidates(true);
+                }
+            }
+
             onAnalysisComplete?.(data.data);
         } catch (err) {
             console.error('Analysis error:', err);
@@ -159,14 +188,61 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
         setPreviewUrl(null);
         setError(null);
         setProcessingTime(0);
+        setImageHash(null);
+        setShowCandidates(false);
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
     };
 
-    const handleSave = () => {
-        if (analyzedData && onSave) {
-            onSave(analyzedData);
+
+
+    const handleCandidateSelect = (candidate: Candidate) => {
+        if (!analyzedData || hasMultipleFoods(analyzedData)) return;
+
+        // Create new food data from candidate
+        const newFoodData: FoodData = {
+            ...analyzedData,
+            food_name: candidate.food_name,
+            reasoning: candidate.reasoning,
+            nutrition: candidate.nutrition,
+            confidence: 1.0, // User confirmed
+            candidates: analyzedData.candidates, // Keep candidates just in case
+        };
+
+        setAnalyzedData(newFoodData);
+        setShowCandidates(false); // Hide selector after selection
+    };
+
+    const handleConfirm = async () => {
+        if (!analyzedData || !imageHash) {
+            setMessage("저장할 데이터가 부족합니다.");
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/food/confirm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    anonymous_user_id: getAnonymousUserId(),
+                    image_hash: imageHash,
+                    food_data: analyzedData,
+                    is_public: isPublic,
+                    processing_time_ms: processingTime
+                }),
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                setMessage("식사가 기록되었습니다! 📝");
+                if (onSave) onSave(analyzedData);
+            } else {
+                throw new Error(result.error);
+            }
+        } catch (e) {
+            console.error(e);
+            setMessage("저장에 실패했습니다.");
         }
     };
 
@@ -294,16 +370,43 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                         </div>
                     )}
 
-                    {/* Results - Using new AnalysisResult component */}
-                    {analyzedData && (
-                        <AnalysisResult
-                            data={analyzedData}
-                            processingTimeMs={processingTime}
-                            onEdit={(editedData) => {
-                                setAnalyzedData(editedData);
+                    {/* Candidate Selector (Shown for Single Food Low Confidence or Manual Trigger) */}
+                    {analyzedData && !hasMultipleFoods(analyzedData) && showCandidates && analyzedData.candidates && analyzedData.candidates.length > 0 && (
+                        <CandidateSelector
+                            candidates={analyzedData.candidates}
+                            onSelect={handleCandidateSelect}
+                            onManualInput={() => {
+                                // For MVP/Demo: Just focus on Edit button usage or simple alert
+                                alert('아래 결과 카드의 ✏️ 버튼을 눌러 직접 수정할 수 있습니다.');
                             }}
-                            onSave={onSave ? handleSave : undefined}
                         />
+                    )}
+
+                    {/* Results */}
+                    {analyzedData && (
+                        <>
+                            <AnalysisResult
+                                data={analyzedData}
+                                processingTimeMs={processingTime}
+                                onEdit={(editedData) => {
+                                    setAnalyzedData(editedData);
+                                }}
+                                onSave={handleConfirm}
+                            />
+
+                            {/* Confirmation Options */}
+                            <div className="pt-2 flex items-center justify-between px-2">
+                                <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 cursor-pointer select-none">
+                                    <input
+                                        type="checkbox"
+                                        checked={isPublic}
+                                        onChange={(e) => setIsPublic(e.target.checked)}
+                                        className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                                    />
+                                    <span>오늘의 익명 피드에 공개하기 🌏</span>
+                                </label>
+                            </div>
+                        </>
                     )}
 
                     {/* Reset Button */}
@@ -317,6 +420,13 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                     </button>
                 </div>
             )}
+
+            {/* Snackbar */}
+            <SimpleSnackbar
+                isVisible={!!message}
+                message={message || ''}
+                onClose={() => setMessage(null)}
+            />
         </div>
     );
 }

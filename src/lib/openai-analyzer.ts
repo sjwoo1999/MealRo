@@ -34,7 +34,14 @@ const KOREAN_FOOD_ANALYSIS_PROMPT = `당신은 한국 음식 전문 영양사입
     "fiber": 숫자(g)
   },
   "tags": ["한식", "국물요리" 등 카테고리],
-  "warnings": ["알레르기 유발 성분 등"]
+  "warnings": ["알레르기 유발 성분 등"],
+  "candidates": [
+    {
+      "food_name": "다른 가능성 있는 음식명 (예: 김치찌개 -> 부대찌개)",
+      "reasoning": "유사한 특징이나 헷갈릴 수 있는 이유",
+      "nutrition": { "calories": 0, "protein": 0, "carbohydrates": 0, "fat": 0, "sodium": 0, "fiber": 0 }
+    }
+  ]
 }
 
 **여러 음식이 보이는 경우:**
@@ -179,5 +186,17 @@ function normalizeFoodData(raw: Record<string, unknown>): FoodData {
         ingredients: Array.isArray(raw.ingredients) ? raw.ingredients as string[] : [],
         tags: Array.isArray(raw.tags) ? raw.tags as string[] : [],
         warnings: Array.isArray(raw.warnings) ? raw.warnings as string[] : [],
+        candidates: Array.isArray(raw.candidates) ? (raw.candidates as any[]).map(c => ({
+            food_name: c.food_name || 'Unknown',
+            reasoning: c.reasoning || '',
+            nutrition: {
+                calories: Number(c.nutrition?.calories) || 0,
+                protein: Number(c.nutrition?.protein) || 0,
+                carbohydrates: Number(c.nutrition?.carbohydrates) || 0,
+                fat: Number(c.nutrition?.fat) || 0,
+                sodium: Number(c.nutrition?.sodium) || 0,
+                fiber: Number(c.nutrition?.fiber) || 0,
+            }
+        })) : [],
     };
 }

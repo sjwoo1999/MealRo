@@ -26,11 +26,19 @@ export interface FoodData {
     food_name: string;           // 한글 음식명
     food_name_en: string;        // 영문 음식명
     confidence: number;          // 0.0 - 1.0
+    reasoning?: string;          // AI reasoning
     serving_size: string;        // "1인분 (300g)"
     nutrition: NutritionData;
     ingredients: string[];       // 주요 재료
     tags: string[];              // 카테고리 태그
     warnings: string[];          // 알레르기 등 주의사항
+
+    // Multi-candidate support
+    candidates?: {
+        food_name: string;
+        reasoning: string;
+        nutrition: NutritionData;
+    }[];
 }
 
 // API Request
@@ -44,6 +52,7 @@ export interface FoodAnalysisRequest {
 export interface FoodAnalysisSuccessSingle {
     success: true;
     data: FoodData;
+    image_hash?: string;
     processing_time_ms: number;
 }
 
@@ -53,6 +62,7 @@ export interface FoodAnalysisSuccessMultiple {
     data: {
         foods: FoodData[];
     };
+    image_hash?: string;
     processing_time_ms: number;
 }
 
@@ -76,7 +86,7 @@ export function hasMultipleFoods(data: FoodData | { foods: FoodData[] }): data i
 
 // Helper to check if confidence needs verification
 export function needsVerification(confidence: number): boolean {
-    return confidence < 0.7;
+    return confidence < 0.8;
 }
 
 // Daily summary response

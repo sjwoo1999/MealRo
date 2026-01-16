@@ -172,3 +172,46 @@ grep -r "TODO(LEGAL_REVIEW)" src/
 ## License
 
 Private - All rights reserved.
+
+## System Flow & Architecture
+
+### Food Analysis & Logging Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant App as Client (Next.js)
+    participant API as API Route
+    participant AI as OpenAI (GPT-4o)
+    participant DB as Supabase
+
+    User->>App: Upload Image
+    App->>App: Compress Image (Max 1MB)
+    App->>API: POST /api/analyze-image
+    API->>AI: Analyze (Vision + JSON Schema)
+    AI-->>API: JSON Result (Candidates, Nutrition)
+    API-->>App: Analysis Result + Image Hash
+    
+    rect rgb(240, 248, 255)
+        Note over App, User: Verification Phase
+        alt High Confidence (>= 0.8)
+            App->>User: Show Primary Result
+        else Low Confidence
+            App->>User: Show Candidate Selector
+        end
+    end
+
+    User->>App: Confirm / Select Candidate
+    App->>API: POST /api/food/confirm
+    API->>DB: INSERT into image_analysis_logs
+    DB-->>API: Success
+    API-->>App: Confirmed
+    App-->>User: Visual Feedback (Snackbar/Animation)
+```
+
+### Key Components
+
+1.  **Scanner Component (`FoodScanner.tsx`)**: Handles image input, compression, and manages the multi-step analysis flow.
+2.  **Analysis Logic (`openai-analyzer.ts`)**: specialized prompt engineering to extract structured JSON data including multiple candidates.
+3.  **Deferred Logging**: Analysis results are not logged immediately. They are only saved to Supabase when the user **confirms** the result, ensuring higher data quality.
+
