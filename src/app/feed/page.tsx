@@ -120,7 +120,7 @@ export default async function FeedPage() {
                                         </span>
                                     </div>
                                     <div className="flex gap-2 text-xs text-slate-400">
-                                        <span>{new Date(event.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                        <span>{new Date(event.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Seoul' })}</span>
                                         {event.food_category && <span>• {event.food_category}</span>}
                                     </div>
                                 </div>
