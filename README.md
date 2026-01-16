@@ -26,7 +26,10 @@
 
 - [x] **AI Food Lens**: 음식 사진을 촬영/업로드하면 수 초 내에 음식명과 영양 정보 추정.
 - [x] **Top-N Candidates**: AI 확신(Confidence)이 80% 미만일 경우, **Top-3 후보군**을 제시하여 사용자 선택 유도.
-- [x] **Public Feed (Opt-in)**: 사용자가 동의한 기록만 익명으로 집계하여 "다른 사람들의 식단" 공유 (Privacy Preserved).
+- [x] **Public Feed (Opt-in)**: 사용자가 동의한 기록만 익명으로 집계하여 "다른 사람들의 식단" 공유.
+    - **Timezone**: 모든 기록은 **한국 표준시(KST)** 기준으로 저장 및 표시 (`YYYY.MM.DD.(ddd).HH:mm`).
+    - **Grouping**: 한 끼 식사(동일 시간대)에 포함된 여러 음식은 하나의 카드로 묶어서 시각화.
+    - **Privacy**: 이미지 저장 없음, 사용자 식별자 비공개.
 - [x] **Deferred Logging**: 사용자가 '저장(Confirm)' 버튼을 누르기 전까지는 서버에 로그를 남기지 않음.
 - [x] **Privacy by Design**: 업로드된 이미지는 분석 즉시 메모리에서 소멸 (No Storage).
 
