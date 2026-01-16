@@ -228,7 +228,7 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                     anonymous_user_id: getAnonymousUserId(),
                     image_hash: imageHash,
                     food_data: analyzedData,
-                    is_public: isPublic,
+                    include_in_public_feed: isPublic,
                     processing_time_ms: processingTime
                 }),
             });
@@ -395,17 +395,21 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                             />
 
                             {/* Confirmation Options */}
-                            <div className="pt-2 flex items-center justify-between px-2">
-                                <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 cursor-pointer select-none">
+                            <div className="space-y-1">
+                                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200 cursor-pointer select-none">
                                     <input
                                         type="checkbox"
                                         checked={isPublic}
                                         onChange={(e) => setIsPublic(e.target.checked)}
                                         className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                                     />
-                                    <span>오늘의 익명 피드에 공개하기 🌏</span>
+                                    <span>내 기록을 익명 집계에 포함 (기본 OFF)</span>
                                 </label>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 pl-6">
+                                    사진은 저장되지 않으며, 선택한 음식명/분류/신뢰도만 익명으로 공개 피드에 집계됩니다.
+                                </p>
                             </div>
+
                         </>
                     )}
 
@@ -419,7 +423,8 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                         다른 사진 분석하기
                     </button>
                 </div>
-            )}
+            )
+            }
 
             {/* Snackbar */}
             <SimpleSnackbar
@@ -427,6 +432,6 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                 message={message || ''}
                 onClose={() => setMessage(null)}
             />
-        </div>
+        </div >
     );
 }

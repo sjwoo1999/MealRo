@@ -25,7 +25,8 @@
 ## ✨ 핵심 기능 (Key Features)
 
 - [x] **AI Food Lens**: 음식 사진을 촬영/업로드하면 수 초 내에 음식명과 영양 정보 추정.
-- [x] **Human-in-the-Loop Selection**: AI 확신(Confidence)이 80% 미만일 경우, **Top-3 후보군**을 제시하여 사용자 선택 유도.
+- [x] **Top-N Candidates**: AI 확신(Confidence)이 80% 미만일 경우, **Top-3 후보군**을 제시하여 사용자 선택 유도.
+- [x] **Public Feed (Opt-in)**: 사용자가 동의한 기록만 익명으로 집계하여 "다른 사람들의 식단" 공유 (Privacy Preserved).
 - [x] **Deferred Logging**: 사용자가 '저장(Confirm)' 버튼을 누르기 전까지는 서버에 로그를 남기지 않음.
 - [x] **Privacy by Design**: 업로드된 이미지는 분석 즉시 메모리에서 소멸 (No Storage).
 

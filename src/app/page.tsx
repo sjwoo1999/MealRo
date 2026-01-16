@@ -49,6 +49,25 @@ export default function HomePage() {
                         <span className="text-sm opacity-90 font-medium">사진으로 영양 분석</span>
                     </Link>
                 </div>
+
+                <div className="mt-6">
+                    <Link
+                        href="/feed"
+                        className="
+                            inline-flex items-center gap-2 px-5 py-2.5 
+                            bg-white dark:bg-slate-800 
+                            border border-slate-200 dark:border-slate-700
+                            rounded-full shadow-sm hover:shadow-md
+                            text-sm font-medium text-slate-600 dark:text-slate-300
+                            hover:text-primary-600 dark:hover:text-primary-400
+                            transition-all
+                        "
+                    >
+                        <span>🌏</span>
+                        <span>다른 사람들은 오늘 뭐 먹었을까?</span>
+                        <span className="text-xs text-slate-400 font-normal ml-1">(익명 피드)</span>
+                    </Link>
+                </div>
             </section>
 
             {/* Features */}
