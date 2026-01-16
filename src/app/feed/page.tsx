@@ -120,7 +120,7 @@ export default async function FeedPage() {
                                         </span>
                                     </div>
                                     <div className="flex gap-2 text-xs text-slate-400">
-                                        <span>{new Date(event.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Seoul' })}</span>
+                                        <span>{formatKSTDate(event.created_at)}</span>
                                         {event.food_category && <span>• {event.food_category}</span>}
                                     </div>
                                 </div>
@@ -152,4 +152,17 @@ function getMealIcon(type: string | null) {
         case 'dinner': return '🌙';
         default: return '🍽️';
     }
+}
+
+function formatKSTDate(isoString: string) {
+    const kstDate = new Date(new Date(isoString).toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+    const year = kstDate.getFullYear();
+    const month = String(kstDate.getMonth() + 1).padStart(2, '0');
+    const day = String(kstDate.getDate()).padStart(2, '0');
+    const weekMap = ['일', '월', '화', '수', '목', '금', '토'];
+    const weekday = weekMap[kstDate.getDay()];
+    const hour = String(kstDate.getHours()).padStart(2, '0');
+    const minute = String(kstDate.getMinutes()).padStart(2, '0');
+
+    return `${year}.${month}.${day}.(${weekday}).${hour}:${minute}`;
 }
