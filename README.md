@@ -8,6 +8,7 @@
 
 - **Frontend**: Next.js 14 (App Router) + TypeScript + TailwindCSS
 - **Backend**: Supabase (PostgreSQL + Auth-less anonymous tracking)
+- **AI**: OpenAI GPT-4o (Vision) for high-precision food analysis
 - **Hosting**: Vercel (optional)
 
 ## Quick Start
@@ -96,8 +97,9 @@ MealRo/
 
 | Route | Description |
 |-------|-------------|
-| `/` | 홈 - 서비스 소개 |
+| `/` | 홈 - 서비스 소개 및 메인 액션 |
 | `/meal` | 끼니별 추천 리스트 |
+| `/scan` | 음식 촬영 및 AI 영양 분석 |
 | `/item/[id]` | 음식 상세 정보 |
 | `/item/[id]/go` | 브릿지 페이지 (외부 링크 전 고지) |
 | `/disclaimer` | 면책조항 |
@@ -146,6 +148,7 @@ MealRo/
 | 빈 상태 | ✅ | EmptyState 컴포넌트 |
 | 필터 | ✅ | FilterChips (카테고리) |
 | 외부 링크 처리 | ✅ | 네이버 쇼핑 검색 링크 |
+| AI 음식 스캔 | ✅ | OpenAI GPT-4o Vision, 고화질 분석 지원 |
 
 ## Known Limitations / 확실하지 않음
 
