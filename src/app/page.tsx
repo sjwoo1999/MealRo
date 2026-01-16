@@ -15,49 +15,38 @@ export default function HomePage() {
                     영양 정보 기반 추천 서비스
                 </p>
 
-                {/* CTA Button */}
-                <Link
-                    href="/meal"
-                    className="
-            inline-flex items-center gap-2
-            px-8 py-4 bg-primary-500 text-white font-semibold text-lg
-            rounded-xl shadow-lg hover:bg-primary-600
-            transition-all duration-200
-            hover:shadow-xl hover:-translate-y-0.5
-            focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2
-          "
-                >
-                    <span>끼니 추천 받기</span>
-                    <span aria-hidden="true">→</span>
-                </Link>
+                {/* CTA Buttons */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-lg mx-auto">
+                    <Link
+                        href="/meal"
+                        className="
+                            flex flex-col items-center justify-center gap-2
+                            px-6 py-6 bg-primary-500 text-white
+                            rounded-xl shadow-lg hover:bg-primary-600
+                            transition-all duration-200
+                            hover:shadow-xl hover:-translate-y-0.5
+                            focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2
+                        "
+                    >
+                        <span className="text-3xl">🍽️</span>
+                        <span className="text-lg font-bold">끼니 추천 받기</span>
+                        <span className="text-sm opacity-90 font-medium">나에게 딱 맞는 메뉴</span>
+                    </Link>
 
-                {/* Scan Button */}
-                <div className="mt-4 flex gap-3 justify-center">
                     <Link
                         href="/scan"
                         className="
-                inline-flex items-center gap-2
-                px-6 py-3 border-2 border-primary-500 text-primary-600 dark:text-primary-400 font-medium
-                rounded-xl hover:bg-primary-50 dark:hover:bg-primary-900/20
-                transition-all duration-200
-                focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2
-              "
+                            flex flex-col items-center justify-center gap-2
+                            px-6 py-6 bg-primary-500 text-white
+                            rounded-xl shadow-lg hover:bg-primary-600
+                            transition-all duration-200
+                            hover:shadow-xl hover:-translate-y-0.5
+                            focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2
+                        "
                     >
-                        <span>📸</span>
-                        <span>음식 스캔</span>
-                    </Link>
-                    <Link
-                        href="/history"
-                        className="
-                inline-flex items-center gap-2
-                px-6 py-3 border-2 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 font-medium
-                rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800
-                transition-all duration-200
-                focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2
-              "
-                    >
-                        <span>📊</span>
-                        <span>식사 기록</span>
+                        <span className="text-3xl">📸</span>
+                        <span className="text-lg font-bold">음식 스캔하기</span>
+                        <span className="text-sm opacity-90 font-medium">사진으로 영양 분석</span>
                     </Link>
                 </div>
             </section>
