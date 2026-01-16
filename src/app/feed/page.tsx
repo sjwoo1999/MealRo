@@ -107,30 +107,65 @@ export default async function FeedPage() {
                         🕒 실시간 기록
                     </h2>
 
-                    <div className="space-y-3">
-                        {events.map((event) => (
-                            <div key={event.id} className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 p-4 rounded-2xl shadow-sm flex items-center justify-between">
-                                <div>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="text-lg">
-                                            {getMealIcon(event.meal_type)}
-                                        </span>
-                                        <span className="font-bold text-slate-800 dark:text-slate-200">
-                                            {event.food_name}
-                                        </span>
+                    <div className="space-y-4">
+                        {(() => {
+                            // Group by exact created_at timestamp
+                            const groupedEvents: Record<string, PublicFoodEvent[]> = {};
+                            events.forEach(event => {
+                                // Use raw timestamp for grouping key to catch simultaneous inserts
+                                const key = event.created_at;
+                                if (!groupedEvents[key]) {
+                                    groupedEvents[key] = [];
+                                }
+                                groupedEvents[key].push(event);
+                            });
+
+                            const sortedGroupKeys = Object.keys(groupedEvents).sort((a, b) =>
+                                new Date(b).getTime() - new Date(a).getTime()
+                            );
+
+                            return sortedGroupKeys.map((key) => {
+                                const group = groupedEvents[key];
+                                const mainEvent = group[0]; // Use first for shared metadata (time, meal type)
+
+                                return (
+                                    <div key={key} className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl shadow-sm overflow-hidden">
+                                        {/* Header: Meal Type & Time */}
+                                        <div className="bg-slate-50 dark:bg-slate-750 px-4 py-2 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-opacity-50">
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xl">
+                                                    {getMealIcon(mainEvent.meal_type)}
+                                                </span>
+                                                <span className="text-xs font-medium text-slate-500">
+                                                    {formatKSTDate(mainEvent.created_at)}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Body: Food List */}
+                                        <div className="p-4 grid gap-3">
+                                            {group.map((event) => (
+                                                <div key={event.id} className="flex justify-between items-center">
+                                                    <div>
+                                                        <div className="font-bold text-slate-800 dark:text-slate-200">
+                                                            {event.food_name}
+                                                        </div>
+                                                        {event.food_category && (
+                                                            <div className="text-xs text-slate-400 mt-0.5">
+                                                                • {event.food_category}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="inline-block px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-[10px] text-slate-500 whitespace-nowrap">
+                                                        AI 신뢰도 {Math.round((event.confidence || 0) * 100)}%
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                    <div className="flex gap-2 text-xs text-slate-400">
-                                        <span>{formatKSTDate(event.created_at)}</span>
-                                        {event.food_category && <span>• {event.food_category}</span>}
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <div className="inline-block px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-[10px] text-slate-500">
-                                        AI 신뢰도 {Math.round((event.confidence || 0) * 100)}%
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+                                );
+                            });
+                        })()}
 
                         {events.length === 0 && (
                             <div className="text-center py-12 text-slate-400 text-sm">
