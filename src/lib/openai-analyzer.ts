@@ -7,19 +7,24 @@ const openai = new OpenAI({
 });
 
 // Korean food specialist prompt
+// Korean food specialist prompt with Chain of Thought
 const KOREAN_FOOD_ANALYSIS_PROMPT = `당신은 한국 음식 전문 영양사입니다. 사용자가 제공하는 음식 사진을 분석하여 영양 정보를 제공합니다.
 
-사진이 흐릿하거나 음식이 작게 보여도 최대한 분석을 시도하세요.
-음식이 아닌 것이 확실한 경우에만 에러를 반환하세요.
+다음 단계를 거쳐 신중하게 분석해주세요:
+1. **관찰**: 이미지의 색상, 질감, 재료, 그릇 형태 등을 자세히 스캔합니다.
+2. **추론**: 관찰된 특징을 바탕으로 가장 근접한 한국 음식(또는 기타 음식)을 파악합니다. 국, 찌개, 탕 등의 미세한 차이를 구분하세요.
+3. **분석**: 파악된 음식의 일반적인 영양소 정보를 계산합니다.
 
-이 음식 사진을 분석해주세요. 반드시 아래 JSON 형식으로만 응답하세요.
+분석 결과는 **반드시 아래 JSON 형식**으로만 응답하세요. Markdown 포맷을 쓰지 마세요.
 
 **단일 음식인 경우:**
 {
+  "reasoning": "이 음식으로 판단한 근거를 1문장으로 요약",
   "food_name": "음식명 (한글)",
   "food_name_en": "Food name (English)",
   "confidence": 0.0-1.0,
   "serving_size": "1인분 기준 그램수 (예: 1인분 (300g))",
+  "ingredients": ["주요 재료 3-5개"],
   "nutrition": {
     "calories": 숫자(kcal),
     "protein": 숫자(g),
@@ -28,8 +33,7 @@ const KOREAN_FOOD_ANALYSIS_PROMPT = `당신은 한국 음식 전문 영양사입
     "sodium": 숫자(mg),
     "fiber": 숫자(g)
   },
-  "ingredients": ["주요 재료 목록"],
-  "tags": ["한식", "양식" 등 카테고리],
+  "tags": ["한식", "국물요리" 등 카테고리],
   "warnings": ["알레르기 유발 성분 등"]
 }
 
@@ -41,9 +45,9 @@ const KOREAN_FOOD_ANALYSIS_PROMPT = `당신은 한국 음식 전문 영양사입
 }
 
 주의사항:
-- 반드시 JSON만 출력하세요.
-- 영양정보는 1인분 기준입니다.
-- 음식이 아닌 것이 *확실할 때만* {"error": "UNRECOGNIZED_FOOD"} 반환.`;
+- **반드시 JSON 객체만** 반환하세요. 앞뒤에 \`\`\`json 같은 태그를 붙이지 마세요.
+- 음식이 명확하지 않아도 최대한 추론하세요.
+- 음식이 아닌 것이 **확실할 때만** {"error": "UNRECOGNIZED_FOOD"} 반환.`;
 
 export async function analyzeFoodImageWithOpenAI(
     imageBase64: string,
@@ -52,26 +56,34 @@ export async function analyzeFoodImageWithOpenAI(
     const startTime = Date.now();
 
     try {
-        // Use OpenAI Responses API with vision
-        const response = await openai.responses.create({
-            model: 'gpt-5-nano', // Using the latest nano model
-            input: [
+        // Use OpenAI Chat Completion API with Vision
+        const response = await openai.chat.completions.create({
+            model: 'gpt-4o', // Upgraded to GPT-4o for best vision performance
+            messages: [
+                {
+                    role: 'system',
+                    content: 'You are a helpful nutrition assistant. Respond only in valid JSON.'
+                },
                 {
                     role: 'user',
                     content: [
-                        { type: 'input_text', text: KOREAN_FOOD_ANALYSIS_PROMPT },
+                        { type: 'text', text: KOREAN_FOOD_ANALYSIS_PROMPT },
                         {
-                            type: 'input_image',
-                            image_url: `data:${mimeType};base64,${imageBase64}`,
-                            detail: 'auto',
+                            type: 'image_url',
+                            image_url: {
+                                url: `data:${mimeType};base64,${imageBase64}`,
+                                detail: 'high', // Force high resolution analysis
+                            },
                         },
                     ],
                 },
             ],
+            response_format: { type: 'json_object' }, // Enforce JSON
+            max_tokens: 1500,
         });
 
-        // Extract output text from response
-        const text = (response as { output_text?: string }).output_text || '';
+        // Extract output content
+        const text = response.choices[0].message.content || '';
 
         // Debug logging
         console.log('OpenAI Response received:', JSON.stringify(response).substring(0, 500));

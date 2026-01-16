@@ -10,9 +10,9 @@ export interface ImageCompressionOptions {
 }
 
 const DEFAULT_OPTIONS: ImageCompressionOptions = {
-    maxSizeMB: 1,
-    maxWidthOrHeight: 1920,
-    quality: 0.8,
+    maxSizeMB: 4, // Increased from 1MB to capture more detail
+    maxWidthOrHeight: 2048, // Optimized for GPT-4 Vision (high detail mode)
+    quality: 0.9, // Higher quality for better texture recognition
 };
 
 /**
