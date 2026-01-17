@@ -54,7 +54,7 @@ export default function RootLayout({
                                             본 서비스의 영양 정보는 음식군 평균값 기반 추정치이며, 의료적 조언을 대체하지 않습니다.
                                         </p>
                                         <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
-                                            © {new Date().getFullYear()} MealRo. All rights reserved.
+                                            © 2026 MealRo. All rights reserved.
                                         </p>
                                     </div>
                                 </footer>

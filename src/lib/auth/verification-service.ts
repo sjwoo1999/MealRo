@@ -27,6 +27,8 @@ const supabaseAdmin = createClient(
 );
 
 // 상수
+// 상수
+const EXPIRATION_TIME_MS = 3 * 60 * 1000; // 3분
 const MAX_ATTEMPTS = 5;
 
 // ============================================
@@ -118,21 +120,40 @@ export async function saveVerification(
 // ============================================
 
 /**
- * 인증번호 이메일 발송
+ * 인증번호 이메일 발송 (Dynamic Provider)
  */
 export async function sendVerificationEmail(
     email: string,
     code: string
 ): Promise<{ success: boolean; error?: string }> {
-    const html = generateVerificationEmailHTML(code, email);
-    const text = generateVerificationEmailText(code, email);
+    const htmlInfo = generateVerificationEmailHTML(code, email);
+    const textInfo = generateVerificationEmailText(code, email);
 
-    return sendEmail({
+    const emailOptions = {
         to: email,
         subject: '[MealRo] 이메일 인증번호',
-        html,
-        text,
-    });
+        html: htmlInfo,
+        text: textInfo
+    };
+
+    // 1. Try Resend
+    const resendKey = process.env.RESEND_API_KEY;
+    if (resendKey && !resendKey.includes('placeholder')) {
+        console.log('🚀 Using Provider: Resend');
+        return await ResendProvider.sendEmail(emailOptions);
+    }
+
+    // 2. Try Nodemailer (Gmail)
+    const gmailUser = process.env.GMAIL_USER;
+    const gmailPass = process.env.GMAIL_APP_PASSWORD;
+    if (gmailUser && gmailPass && !gmailPass.includes('placeholder')) {
+        console.log('🚀 Using Provider: Nodemailer (Gmail)');
+        return await NodemailerProvider.sendEmail(emailOptions);
+    }
+
+    // 3. Fallback to Mock (using Resend's mock logic as default)
+    console.log('⚠️ No active email provider found. Using Mock Mode.');
+    return await ResendProvider.sendEmail(emailOptions);
 }
 
 /**

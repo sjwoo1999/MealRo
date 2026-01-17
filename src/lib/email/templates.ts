@@ -3,7 +3,7 @@
  * 인증번호 이메일 HTML 템플릿
  */
 export function generateVerificationEmailHTML(code: string, email: string): string {
-    return `
+  return `
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -73,7 +73,7 @@ export function generateVerificationEmailHTML(code: string, email: string): stri
  * 인증번호 이메일 Plain Text 템플릿
  */
 export function generateVerificationEmailText(code: string, email: string): string {
-    return `
+  return `
 MealRo 이메일 인증
 ==================
 
@@ -91,6 +91,6 @@ MealRo 이메일 인증
 
 ---
 본 메일은 ${email}로 발송되었습니다.
-© 2025 MealRo. All rights reserved.
+© 2026 MealRo. All rights reserved.
   `.trim();
 }
