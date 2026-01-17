@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
         // 2. Fetch Nutrition Info (App-side Join)
         // Since FK is missing in schema, we cannot use join syntax inside select
-        const foodGroups = [...new Set(menuData.map((item: any) => item.food_group))];
+        const foodGroups = Array.from(new Set(menuData.map((item: any) => item.food_group)));
 
         const { data: nutritionData, error: nutritionError } = await supabase
             .from('nutrition_group_avg')
