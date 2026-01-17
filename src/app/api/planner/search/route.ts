@@ -16,35 +16,49 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        // Search by name
-        const { data, error } = await supabase
+        // 1. Search Menu Items
+        const { data: menuData, error: menuError } = await supabase
             .from('menu_items')
-            .select(`
-                id, name, category, meal_type,
-                nutrition:nutrition_group_avg(*)
-            `)
+            .select('*')
             .ilike('name', `%${query}%`)
             .limit(20);
 
-        if (error) {
-            throw error;
+        if (menuError) throw menuError;
+        if (!menuData || menuData.length === 0) {
+            return NextResponse.json({ success: true, data: [] });
         }
 
-        // Format for Client
-        // Note: We need to calculate calories if not present in menu_items
-        // Assuming 3.5 multiplier logic consistency
+        // 2. Fetch Nutrition Info (App-side Join)
+        // Since FK is missing in schema, we cannot use join syntax inside select
+        const foodGroups = [...new Set(menuData.map((item: any) => item.food_group))];
+
+        const { data: nutritionData, error: nutritionError } = await supabase
+            .from('nutrition_group_avg')
+            .select('*')
+            .in('food_group', foodGroups);
+
+        if (nutritionError) throw nutritionError;
+
+        // 3. Create Map for fast lookup
+        const nutritionMap = new Map();
+        (nutritionData || []).forEach((n: any) => nutritionMap.set(n.food_group, n));
+
+        // 4. Merge Data
         const servingMultiplier = 3.5;
 
-        const results = (data || []).map((item: any) => ({
-            id: item.id,
-            name: item.name,
-            category: item.category,
-            mealType: item.meal_type, // Assuming column name match
-            calories: item.nutrition ? Math.round(item.nutrition.kcal_per_100g * servingMultiplier) : 0,
-            protein: item.nutrition ? Math.round(item.nutrition.protein_per_100g * servingMultiplier) : 0,
-            carbs: item.nutrition ? Math.round(item.nutrition.carbs_per_100g * servingMultiplier) : 0,
-            fat: item.nutrition ? Math.round(item.nutrition.fat_per_100g * servingMultiplier) : 0,
-        }));
+        const results = menuData.map((item: any) => {
+            const nutr = nutritionMap.get(item.food_group);
+            return {
+                id: item.id,
+                name: item.name,
+                category: item.category,
+                mealType: item.meal_type,
+                calories: nutr ? Math.round(nutr.kcal_per_100g * servingMultiplier) : 0,
+                protein: nutr ? Math.round(nutr.protein_per_100g * servingMultiplier) : 0,
+                carbs: nutr ? Math.round(nutr.carbs_per_100g * servingMultiplier) : 0,
+                fat: nutr ? Math.round(nutr.fat_per_100g * servingMultiplier) : 0,
+            };
+        });
 
         return NextResponse.json({
             success: true,
