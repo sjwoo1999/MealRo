@@ -1,8 +1,10 @@
-
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
-import { sendEmail } from '@/lib/email/nodemailer';
 import { generateVerificationEmailHTML, generateVerificationEmailText } from '@/lib/email/templates';
+
+// Dynamic Import Logic for Email Providers
+import * as ResendProvider from '@/lib/email/resend';
+import * as NodemailerProvider from '@/lib/email/nodemailer';
 
 // Supabase Admin Client (Service Role)
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -25,7 +27,6 @@ const supabaseAdmin = createClient(
 );
 
 // 상수
-const EXPIRATION_TIME_MS = 3 * 60 * 1000; // 3분
 const MAX_ATTEMPTS = 5;
 
 // ============================================
@@ -81,9 +82,6 @@ export async function invalidatePreviousCodes(email: string): Promise<void> {
         .is('consumed_at', null);
 }
 
-/**
- * 인증번호 저장
- */
 export async function saveVerification(
     email: string,
     code: string,
