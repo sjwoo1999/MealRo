@@ -104,6 +104,7 @@ export default function VerificationCodeInput({
           `}
                     aria-label={`Digit ${index + 1}`}
                     aria-invalid={error}
+                    autoComplete="one-time-code"
                 />
             ))}
         </div>
