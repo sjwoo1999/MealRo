@@ -45,12 +45,29 @@ export default function BottomNav() {
                 <div className="flex justify-around items-center h-16 max-w-2xl mx-auto">
                     {allTabs.map((tab) => {
                         const isActive = pathname === tab.href || (tab.href !== '/' && pathname?.startsWith(tab.href));
-                        const isLocked = tab.locked && !isLoading; // Only lock if loaded and unauth
+                        // Fix: If loading, treat as locked to prevent accidental auth redirect
+                        // Or wait? Better to assume locked if Auth required.
+                        // Actually, tab.locked depends on !isAuthenticated. If isLoading is true, we don't know yet.
+                        // But if we let them click, they get redirected.
+                        // Safe bet: If tab.locked is potentially true (but undefined due to loading), we should block.
+                        // Current logic: const isLocked = tab.locked && !isLoading; 
+                        // -> If loading, isLocked is false. This is the BUG.
+
+                        // Revised logic:
+                        // If tab requires auth (locked condition present) and we are not explicitly authenticated,
+                        // we should treat it as locked.
+                        // tab.locked passed from above is `!isAuthenticated`.
+                        // If isLoading is true, isAuthenticated is usually false. So tab.locked is true.
+                        // So `tab.locked` is already true during loading. 
+                        // The previous code `&& !isLoading` force-unlocked it.
+
+                        // Simply removing `&& !isLoading` makes it locked during loading, which is safer.
+                        const isLocked = tab.locked;
 
                         return (
                             <Link
                                 key={tab.href}
-                                href={tab.href}
+                                href={isLocked ? '#' : tab.href} // Prevent navigation via href if locked
                                 onClick={(e) => handleTabClick(e, tab.href, isLocked)}
                                 className={`flex flex-col items-center justify-center flex-1 h-full px-1 transition-colors relative ${isActive
                                     ? 'text-green-600 dark:text-green-400'
