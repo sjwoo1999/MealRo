@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOnboardingCheck } from '@/hooks/useOnboardingCheck';
-import { useAuthContext } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/common';
 import { SelectedMenu, MealSlot, ReversePlanResult } from '@/types/planner';
 
@@ -17,7 +17,7 @@ import RecommendStatusBanner from './RecommendStatusBanner';
 const PlannerForm = () => {
     // 1. Disable redirect for Guest Mode
     const { profile } = useOnboardingCheck({ redirectIfNotOnboarded: false });
-    const { session } = useAuthContext();
+    const { user: session } = useAuth(); // AuthContext maps user to session for this scope
     const router = useRouter();
 
     // State

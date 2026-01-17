@@ -3,11 +3,11 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useAuthContext } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useOnboardingContext } from '@/contexts/OnboardingContext';
 
 const RecommendStatusBanner = () => {
-    const { session } = useAuthContext();
+    const { user: session } = useAuth();
     const { isOnboarded } = useOnboardingContext();
 
     // 1. Guest (비로그인)
