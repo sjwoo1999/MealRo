@@ -44,36 +44,36 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         return id;
     };
 
-    const fetchProfile = async () => {
-        const userId = getUserId();
-        if (!userId) {
-            setIsLoading(false);
-            return;
-        }
+    useEffect(() => {
+        const fetchProfile = async () => {
+            const userId = getUserId();
+            if (!userId) {
+                setIsLoading(false);
+                return;
+            }
 
-        try {
-            const res = await fetch(`/api/user/profile?userId=${userId}`);
-            if (res.ok) {
-                const data = await res.json();
-                if (data.success && data.data) {
-                    setProfile(data.data as UserProfile);
+            try {
+                const res = await fetch(`/api/user/profile?userId=${userId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.success && data.data) {
+                        setProfile(data.data as UserProfile);
+                    } else {
+                        setProfile(null);
+                    }
                 } else {
                     setProfile(null);
                 }
-            } else {
+            } catch (error) {
+                console.error("Error fetching profile", error);
                 setProfile(null);
+            } finally {
+                setIsLoading(false);
             }
-        } catch (error) {
-            console.error("Error fetching profile", error);
-            setProfile(null);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+        };
 
-    useEffect(() => {
         fetchProfile();
-    }, [fetchProfile]);
+    }, []);
 
     const updateProfile = async (data: Partial<UserProfile>) => {
         const userId = getUserId();
