@@ -1,13 +1,21 @@
 
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
-import { sendEmail } from '@/lib/email/sendgrid';
+import { sendEmail } from '@/lib/email/nodemailer';
 import { generateVerificationEmailHTML, generateVerificationEmailText } from '@/lib/email/templates';
 
 // Supabase Admin Client (Service Role)
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!SUPABASE_SERVICE_ROLE_KEY || SUPABASE_SERVICE_ROLE_KEY.includes('service_role_key_here')) {
+    console.error('🚨 CRITICAL: SUPABASE_SERVICE_ROLE_KEY is missing or invalid.');
+    console.error('   -> Email Auth will FAIL because it cannot write to the database.');
+    console.error('   -> Please get the "service_role" secret from Supabase Dashboard -> Project Settings -> API.');
+}
+
 const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    SUPABASE_SERVICE_ROLE_KEY || 'invalid_key_placeholder', // Prevent crash on init, fail on call
     {
         auth: {
             autoRefreshToken: false,
