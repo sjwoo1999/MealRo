@@ -53,8 +53,7 @@ export default function ScanPage() {
                         <span>🔒</span> 개인정보 보호
                     </h3>
                     <p className="mt-2 text-sm text-green-700 dark:text-green-400">
-                        업로드한 이미지는 <strong>분석에만 사용</strong>되며, 서버나 데이터베이스에 저장되지 않습니다.
-                        분석이 완료되면 이미지는 즉시 삭제됩니다.
+                        업로드한 이미지는 <strong>서비스 품질 향상 및 데이터셋 구축</strong>을 위해 안전하게 저장될 수 있습니다.
                     </p>
                 </div>
 

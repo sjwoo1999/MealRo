@@ -414,7 +414,7 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                                     <span>내 기록을 익명 집계에 포함 (기본 OFF)</span>
                                 </label>
                                 <p className="text-xs text-slate-500 dark:text-slate-400 pl-6">
-                                    사진은 저장되지 않으며, 선택한 음식명/분류/신뢰도만 익명으로 공개 피드에 집계됩니다.
+                                    사진은 서비스 개선을 위해 안전하게 저장되며, 음식명/분류/신뢰도만 익명으로 공개 피드에 집계됩니다.
                                 </p>
                             </div>
 
