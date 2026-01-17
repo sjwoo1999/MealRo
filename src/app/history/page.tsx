@@ -25,7 +25,9 @@ const MEAL_TYPE_LABELS: Record<string, { label: string; icon: string }> = {
     snack: { label: '간식', icon: '🍪' },
 };
 
-export default function HistoryPage() {
+import { Suspense } from 'react';
+
+function HistoryContent() {
     const [summary, setSummary] = useState<DailySummaryResponse | null>(null);
     const [meals, setMeals] = useState<MealLog[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -244,5 +246,13 @@ export default function HistoryPage() {
                 </Link>
             </div>
         </main>
+    );
+}
+
+export default function HistoryPage() {
+    return (
+        <Suspense fallback={<div className="p-8 text-center text-slate-500">로딩 중...</div>}>
+            <HistoryContent />
+        </Suspense>
     );
 }

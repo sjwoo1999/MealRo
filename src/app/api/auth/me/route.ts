@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth/jwt';
 import { supabaseAdmin } from '@/lib/auth/verification-service';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
     try {
         // 쿠키 또는 Authorization 헤더에서 토큰 추출
