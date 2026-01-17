@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useOnboardingCheck } from '@/hooks/useOnboardingCheck';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { Button } from '@/components/common';
 import { SelectedMenu, MealSlot, ReversePlanResult } from '@/types/planner';
 
@@ -10,9 +12,13 @@ import MenuSelector from './MenuSelector';
 import RecommendOptionCard from './RecommendOptionCard';
 import RecommendLoading from './RecommendLoading';
 import NutritionSummary from './NutritionSummary';
+import RecommendStatusBanner from './RecommendStatusBanner';
 
 const PlannerForm = () => {
-    const { profile } = useOnboardingCheck({ redirectIfNotOnboarded: true });
+    // 1. Disable redirect for Guest Mode
+    const { profile } = useOnboardingCheck({ redirectIfNotOnboarded: false });
+    const { session } = useAuthContext();
+    const router = useRouter();
 
     // State
     const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -22,9 +28,43 @@ const PlannerForm = () => {
     const [selectedPlanIndex, setSelectedPlanIndex] = useState<number>(0);
     const [isLoading, setIsLoading] = useState(false);
 
+    // Default Profile for Guests
+    const DEFAULT_PROFILE = {
+        target_calories: 2000,
+        target_protein: 100,
+        target_carbs: 250,
+        target_fat: 65,
+    };
+
+    const effectiveProfile = profile || DEFAULT_PROFILE;
+
+    // Restore Guest Data on Mount
+    useEffect(() => {
+        const savedData = localStorage.getItem('mealro_guest_data');
+        if (savedData) {
+            try {
+                const parsed = JSON.parse(savedData);
+                if (parsed.plans && parsed.selectedMenu) {
+                    setPlans(parsed.plans);
+                    setSelectedMenu(parsed.selectedMenu);
+                    setStep(3); // Go directly to results
+
+                    // Show simple feedback (Optional: Add Toast later)
+                    console.log("📂 Guest data restored!");
+
+                    // Clear after restore to prevent stale data
+                    localStorage.removeItem('mealro_guest_data');
+                }
+            } catch (e) {
+                console.error("Failed to restore guest data", e);
+                localStorage.removeItem('mealro_guest_data');
+            }
+        }
+    }, []);
+
     // Handlers
     const handleAnalyze = async () => {
-        if (!selectedMenu || !profile) return;
+        if (!selectedMenu) return;
 
         setIsLoading(true);
         setStep(2); // Show loading UI
@@ -35,10 +75,10 @@ const PlannerForm = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     selectedMenu: selectedMenu,
-                    userTargetCalories: profile.target_calories,
-                    userTargetProtein: profile.target_protein,
-                    userTargetCarbs: profile.target_carbs,
-                    userTargetFat: profile.target_fat,
+                    userTargetCalories: effectiveProfile.target_calories,
+                    userTargetProtein: effectiveProfile.target_protein,
+                    userTargetCarbs: effectiveProfile.target_carbs,
+                    userTargetFat: effectiveProfile.target_fat,
                 })
             });
             const data = await res.json();
@@ -60,7 +100,22 @@ const PlannerForm = () => {
     };
 
     const handleSave = async () => {
-        // TODO: Save to history API
+        // [Guest Logic] Save to LocalStorage and Redirect to Auth
+        if (!session) {
+            const guestData = {
+                plans,
+                selectedMenu,
+                timestamp: new Date().toISOString()
+            };
+            localStorage.setItem('mealro_guest_data', JSON.stringify(guestData));
+
+            if (confirm('이 식단을 저장하려면 로그인이 필요합니다.\n로그인 페이지로 이동하시겠습니까?')) {
+                router.push('/auth');
+            }
+            return;
+        }
+
+        // [Member Logic] TODO: Call History API
         alert("식단이 저장되었습니다! (History API 호출 예정)");
     };
 
@@ -76,6 +131,9 @@ const PlannerForm = () => {
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">추천 식단</h2>
                     <Button variant="ghost" size="sm" onClick={() => setStep(1)}>다시 하기</Button>
                 </div>
+
+                {/* Banner for Context */}
+                <RecommendStatusBanner />
 
                 <NutritionSummary
                     current={selectedPlan.dailyTotal}
@@ -95,7 +153,7 @@ const PlannerForm = () => {
 
                 <div className="fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex max-w-md mx-auto">
                     <Button fullWidth onClick={handleSave}>
-                        이 식단으로 결정하기
+                        {session ? '이 식단으로 결정하기' : '로그인하고 식단 저장하기'}
                     </Button>
                 </div>
             </div>
@@ -104,6 +162,9 @@ const PlannerForm = () => {
 
     return (
         <div className="space-y-8 animate-fade-in-up">
+            {/* Banner for Context */}
+            <RecommendStatusBanner />
+
             <div>
                 <label className="block text-sm font-bold text-slate-900 dark:text-white mb-2">
                     어떤 끼니를 드실 예정인가요?
