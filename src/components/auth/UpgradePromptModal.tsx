@@ -39,7 +39,7 @@ export default function UpgradePromptModal({
                     </div>
 
                     <h2 className="text-xl font-bold text-gray-900 mb-2">
-                        데이터를 안전하게 보관하세요!
+                        데이터를 잃지 마세요!
                     </h2>
 
                     <p className="text-gray-600 mb-6 leading-relaxed">

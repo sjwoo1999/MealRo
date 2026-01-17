@@ -169,15 +169,18 @@ export default function HistoryPage() {
                 {/* Empty State */}
                 {!isLoading && meals.length === 0 && (
                     <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-2xl">
-                        <div className="text-5xl mb-4">🍽️</div>
-                        <p className="text-slate-600 dark:text-slate-400 mb-4">
-                            이 날짜에 기록된 식사가 없습니다
+                        <div className="text-5xl mb-4">📜</div>
+                        <p className="text-lg font-bold text-slate-900 dark:text-white mb-2">
+                            식단 기록이 비어있어요
+                        </p>
+                        <p className="text-slate-500 dark:text-slate-400 mb-6">
+                            저장한 식단 기록이 여기에 표시됩니다.
                         </p>
                         <Link
-                            href="/scan"
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg"
+                            href="/"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-primary-500 text-white font-medium rounded-xl shadow-md hover:bg-primary-600 transition-colors"
                         >
-                            📸 음식 스캔하기
+                            음식 스캔하러 가기
                         </Link>
                     </div>
                 )}
