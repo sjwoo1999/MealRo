@@ -1,8 +1,10 @@
 import Link from 'next/link';
+import HomeOnboardingSection from '@/components/home/HomeOnboardingSection';
 
 export default function HomePage() {
     return (
         <div className="max-w-2xl mx-auto px-4 py-8">
+            <HomeOnboardingSection />
             {/* Hero Section */}
             <section className="text-center py-12">
                 <h1 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4">

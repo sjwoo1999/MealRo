@@ -1,6 +1,8 @@
 // Database types generated from Supabase schema
 // These types provide type-safety for all database operations
 
+import { UserProfile } from '@/types/user';
+
 export type MealType = 'breakfast' | 'lunch' | 'dinner';
 export type Grade = 'A' | 'B' | 'C' | 'D';
 
@@ -69,6 +71,11 @@ export interface Database {
                 Row: Event;
                 Insert: Omit<Event, 'id' | 'created_at'>;
                 Update: Partial<Omit<Event, 'id' | 'created_at'>>;
+            };
+            user_profiles: {
+                Row: UserProfile;
+                Insert: Omit<UserProfile, 'id' | 'created_at' | 'updated_at'>;
+                Update: Partial<Omit<UserProfile, 'id' | 'created_at' | 'updated_at'>>;
             };
         };
         Views: Record<string, never>;

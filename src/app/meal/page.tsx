@@ -1,6 +1,4 @@
-import { Suspense } from 'react';
-import MealContent from './MealContent';
-import SkeletonCard from '@/components/SkeletonCard';
+import PlannerForm from '@/components/planner/PlannerForm';
 
 export const metadata = {
     title: '끼니 추천 - MealRo',
@@ -10,34 +8,17 @@ export const metadata = {
 export default function MealPage() {
     return (
         <div className="max-w-2xl mx-auto px-4 py-6">
-            <Suspense fallback={<MealPageSkeleton />}>
-                <MealContent />
-            </Suspense>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
+                오늘의 끼니 역추산 🔄
+            </h1>
+            <p className="text-slate-600 dark:text-slate-400 mb-8">
+                오늘 먹은(먹을) 한 끼를 입력하면, 나머지 끼니를 건강하게 추천해드려요.
+            </p>
+            <PlannerForm />
         </div>
     );
 }
 
-function MealPageSkeleton() {
-    return (
-        <div className="space-y-6">
-            {/* Tabs skeleton */}
-            <div className="flex gap-2 p-2 bg-slate-100 dark:bg-slate-800 rounded-xl">
-                <div className="skeleton flex-1 h-12 rounded-lg" />
-                <div className="skeleton flex-1 h-12 rounded-lg" />
-                <div className="skeleton flex-1 h-12 rounded-lg" />
-            </div>
 
-            {/* Filter skeleton */}
-            <div className="flex gap-2">
-                <div className="skeleton h-8 w-16 rounded-full" />
-                <div className="skeleton h-8 w-20 rounded-full" />
-                <div className="skeleton h-8 w-18 rounded-full" />
-            </div>
+// Removed unused skeleton
 
-            {/* Cards skeleton */}
-            <div className="space-y-4">
-                <SkeletonCard count={4} />
-            </div>
-        </div>
-    );
-}
