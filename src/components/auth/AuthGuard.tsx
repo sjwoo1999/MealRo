@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 
 interface AuthGuardProps {
@@ -9,7 +9,7 @@ interface AuthGuardProps {
     fallback?: React.ReactNode;
 }
 
-export default function AuthGuard({ children, fallback }: AuthGuardProps) {
+function AuthGuardContent({ children, fallback }: AuthGuardProps) {
     const { isAuthenticated, isLoading } = useAuthGuard();
 
     if (isLoading) {
@@ -29,4 +29,19 @@ export default function AuthGuard({ children, fallback }: AuthGuardProps) {
     }
 
     return <>{children}</>;
+}
+
+export default function AuthGuard(props: AuthGuardProps) {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="flex flex-col items-center gap-3">
+                    <div className="w-10 h-10 border-4 border-green-200 border-t-green-500 rounded-full animate-spin"></div>
+                    <p className="text-gray-400 text-sm font-medium animate-pulse">페이지 로딩 중...</p>
+                </div>
+            </div>
+        }>
+            <AuthGuardContent {...props} />
+        </Suspense>
+    );
 }
