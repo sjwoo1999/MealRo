@@ -53,6 +53,7 @@ export interface FoodAnalysisSuccessSingle {
     success: true;
     data: FoodData;
     image_hash?: string;
+    storage_path?: string; // Stored image path for dev dataset link
     processing_time_ms: number;
 }
 
@@ -63,6 +64,7 @@ export interface FoodAnalysisSuccessMultiple {
         foods: FoodData[];
     };
     image_hash?: string;
+    storage_path?: string;
     processing_time_ms: number;
 }
 

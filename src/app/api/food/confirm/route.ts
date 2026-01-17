@@ -85,13 +85,15 @@ export async function POST(request: NextRequest) {
             image_hash,
             food_data,
             include_in_public_feed = false, // Client opt-in
-            processing_time_ms
+            processing_time_ms,
+            storage_path // Optional storage path from client
         } = body as {
             anonymous_user_id: string;
             image_hash: string;
             food_data: FoodData | { foods: FoodData[] };
             include_in_public_feed?: boolean;
             processing_time_ms?: number;
+            storage_path?: string;
         };
 
         if (!anonymous_user_id || !image_hash || !food_data) {
@@ -127,6 +129,8 @@ export async function POST(request: NextRequest) {
                 estimated_nutrition: totals,
                 gemini_response_raw: null,
                 processing_time_ms: processing_time_ms || 0,
+                // store storage path if column exists (users need to add this column manually if not present)
+                image_path: storage_path || null,
             })
             .select()
             .single();

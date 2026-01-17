@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { analyzeFoodImageWithOpenAI } from '@/lib/openai-analyzer';
-import { FoodData } from '@/types/food';
 import { createClient } from '@supabase/supabase-js';
 
-// Create Supabase client for logging
-const supabase = createClient(
+// Initialize Supabase Admin Client for Storage (Bypass RLS)
+const supabaseAdmin = process.env.SUPABASE_SERVICE_ROLE_KEY
+    ? createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+    )
+    : null;
+
+// Fallback (might fail if RLS is strict)
+const supabaseAnon = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
@@ -40,25 +47,53 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Convert file to base64
+        // Convert file to base64 for AI
         const arrayBuffer = await file.arrayBuffer();
-        const base64 = Buffer.from(arrayBuffer).toString('base64');
-
-        // Create simple hash for caching (first 64 chars of base64)
+        const buffer = Buffer.from(arrayBuffer);
+        const base64 = buffer.toString('base64');
         const imageHash = base64.substring(0, 64);
 
-        // Analyze image with OpenAI (GPT-4o)
-        const result = await analyzeFoodImageWithOpenAI(base64, file.type);
+        // Prepare Promise: OpenAI Analysis
+        const analysisPromise = analyzeFoodImageWithOpenAI(base64, file.type);
 
-        // Return result with image hash (Logging is now deferred to confirmation)
-        if (result.success) {
+        // Prepare Promise: Supabase Storage Upload
+        // Path: today/timestamp_hash.jpg
+        const today = new Date().toISOString().split('T')[0];
+        const ext = file.name.split('.').pop() || 'jpg';
+        const storagePath = `${today}/${Date.now()}_${imageHash.substring(0, 8)}.${ext}`;
+
+        const uploadPromise = (async () => {
+            const supabase = supabaseAdmin || supabaseAnon;
+            // Use 'food-images' bucket. Ensure it exists!
+            const { error } = await supabase.storage
+                .from('food-images')
+                .upload(storagePath, file, {
+                    contentType: file.type,
+                    upsert: false
+                });
+
+            if (error) {
+                console.error('Storage upload failed:', error);
+                return null;
+            }
+            return storagePath;
+        })();
+
+        // Execute in Parallel
+        const [analysisResult, uploadedPath] = await Promise.all([
+            analysisPromise,
+            uploadPromise
+        ]);
+
+        if (analysisResult.success) {
             return NextResponse.json({
-                ...result,
+                ...analysisResult,
                 image_hash: imageHash,
+                storage_path: uploadedPath // Return path to client for confirmation step
             });
         }
 
-        return NextResponse.json(result);
+        return NextResponse.json(analysisResult);
 
     } catch (error) {
         console.error('Image analysis API error:', error);

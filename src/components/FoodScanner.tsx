@@ -73,7 +73,9 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
     const [compressionInfo, setCompressionInfo] = useState<string | null>(null);
 
     // New State for Multi-Candidate & Confirmation
+    // New State for Multi-Candidate & Confirmation
     const [imageHash, setImageHash] = useState<string | null>(null);
+    const [storagePath, setStoragePath] = useState<string | null>(null);
     const [showCandidates, setShowCandidates] = useState(false);
     const [isPublic, setIsPublic] = useState(false);
     const [message, setMessage] = useState<string | null>(null); // For Snackbar
@@ -85,14 +87,14 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
         setAnalyzedData(null);
         setCompressionInfo(null);
         setImageHash(null);
+        setStoragePath(null);
         setShowCandidates(false);
         setIsPublic(false);
 
-        // Create preview
+        // ... existing preview code ...
         const objectUrl = URL.createObjectURL(file);
         setPreviewUrl(objectUrl);
 
-        // Compress image if needed
         setIsCompressing(true);
         let processedFile = file;
         try {
@@ -108,16 +110,13 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
         }
         setIsCompressing(false);
 
-        // Start analysis
         setIsAnalyzing(true);
-
         try {
             const formData = new FormData();
             formData.append('image', processedFile);
-            formData.append('anonymousUserId', getAnonymousUserId()); // Ensure this matches API expectation
+            formData.append('anonymousUserId', getAnonymousUserId());
 
-            // Use new API endpoint
-            const response = await fetch('/api/analyze-image', { // Changed to analyze-image based on context
+            const response = await fetch('/api/analyze-image', {
                 method: 'POST',
                 body: formData,
             });
@@ -131,13 +130,14 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
             setAnalyzedData(data.data);
             setProcessingTime(data.processing_time_ms);
 
-            // Set image hash for confirmation
             if (data.image_hash) {
                 setImageHash(data.image_hash);
             }
+            // Save storage path if available
+            if (data.storage_path) {
+                setStoragePath(data.storage_path);
+            }
 
-            // Check if we need to show candidates (Low Confidence)
-            // Only apply to single food for now
             if (!hasMultipleFoods(data.data)) {
                 if (needsVerification(data.data.confidence)) {
                     setShowCandidates(true);
@@ -152,6 +152,14 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
             setIsAnalyzing(false);
         }
     }, [onAnalysisComplete]);
+
+    // ... (omitting existing handleDrag/Drop/Click which are unchanged) 
+    // Wait, I must provide contiguous block.
+    // I will replace from `const handleFile` start to `handleConfirm` to be safe/clean or just the `handleFile` and `handleConfirm` parts.
+    // Let's replace the state declarations and handleFile first. Actually better to use MultiReplace if possible but I only have ReplaceFileContent.
+    // I will be precise.
+
+    // ... (rest of code)
 
     const handleDrag = useCallback((e: React.DragEvent) => {
         e.preventDefault();
@@ -189,13 +197,12 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
         setError(null);
         setProcessingTime(0);
         setImageHash(null);
+        setStoragePath(null);
         setShowCandidates(false);
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
     };
-
-
 
     const handleCandidateSelect = (candidate: Candidate) => {
         if (!analyzedData || hasMultipleFoods(analyzedData)) return;
@@ -229,7 +236,8 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                     image_hash: imageHash,
                     food_data: analyzedData,
                     include_in_public_feed: isPublic,
-                    processing_time_ms: processingTime
+                    processing_time_ms: processingTime,
+                    storage_path: storagePath // Pass storage path for developer DB
                 }),
             });
 
