@@ -7,6 +7,8 @@ import { compressImage, formatFileSize } from '@/lib/image-compress';
 import AnalysisResult from '@/components/food/AnalysisResult';
 import CandidateSelector from '@/components/CandidateSelector';
 import SimpleSnackbar from '@/components/SimpleSnackbar';
+import { useAuth } from '@/contexts/AuthContext';
+import UpgradePromptModal from '@/components/auth/UpgradePromptModal';
 
 type AnalyzedData = FoodData | { foods: FoodData[] };
 
@@ -79,6 +81,8 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
     const [showCandidates, setShowCandidates] = useState(false);
     const [isPublic, setIsPublic] = useState(false);
     const [message, setMessage] = useState<string | null>(null); // For Snackbar
+    const { user } = useAuth();
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -224,6 +228,11 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
     const handleConfirm = async () => {
         if (!analyzedData || !imageHash) {
             setMessage("저장할 데이터가 부족합니다.");
+            return;
+        }
+
+        if (!user) {
+            setShowUpgradeModal(true);
             return;
         }
 
@@ -439,6 +448,11 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                 isVisible={!!message}
                 message={message || ''}
                 onClose={() => setMessage(null)}
+            />
+            <UpgradePromptModal
+                isOpen={showUpgradeModal}
+                onClose={() => setShowUpgradeModal(false)}
+                message="식사 기록을 안전하게 저장하려면 계정이 필요해요."
             />
         </div >
     );

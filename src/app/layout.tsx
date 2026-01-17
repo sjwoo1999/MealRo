@@ -16,6 +16,9 @@ export const metadata: Metadata = {
 
 import BottomNav from '@/components/layout/BottomNav';
 
+import { AuthProvider } from '@/contexts/AuthContext';
+import Header from '@/components/layout/Header';
+
 export default function RootLayout({
     children,
 }: {
@@ -28,48 +31,39 @@ export default function RootLayout({
                 <link rel="icon" href="/favicon.ico" sizes="any" />
             </head>
             <body className="min-h-screen bg-slate-50 dark:bg-slate-900">
-                <SnackbarProvider>
-                    <OnboardingProvider>
-                        <div className="min-h-screen flex flex-col pb-16 md:pb-0">
-                            {/* Header */}
-                            <header className="sticky top-0 z-50 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-                                <div className="max-w-2xl mx-auto px-4 py-3">
-                                    <a
-                                        href="/"
-                                        className="flex items-center gap-2 text-xl font-bold text-primary-600 dark:text-primary-400"
-                                    >
-                                        <span aria-hidden="true">🍽️</span>
-                                        <span>MealRo</span>
-                                    </a>
-                                </div>
-                            </header>
+                <AuthProvider>
+                    <SnackbarProvider>
+                        <OnboardingProvider>
+                            <div className="min-h-screen flex flex-col pb-16 md:pb-0">
+                                <Header />
 
-                            {/* Main content */}
-                            <main className="flex-1">
-                                {children}
-                            </main>
+                                {/* Main content */}
+                                <main className="flex-1">
+                                    {children}
+                                </main>
 
-                            {/* Footer */}
-                            <footer className="bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 mb-safe">
-                                <div className="max-w-2xl mx-auto px-4 py-6">
-                                    <nav className="flex flex-wrap gap-4 text-sm text-slate-500 dark:text-slate-400 mb-4">
-                                        <a href="/about" className="hover:text-primary-600">소개</a>
-                                        <a href="/disclaimer" className="hover:text-primary-600">면책조항</a>
-                                    </nav>
-                                    <p className="text-xs text-slate-400 dark:text-slate-500">
-                                        {/* TODO(LEGAL_REVIEW): 면책 문구 법무 검토 필요 */}
-                                        본 서비스의 영양 정보는 음식군 평균값 기반 추정치이며, 의료적 조언을 대체하지 않습니다.
-                                    </p>
-                                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
-                                        © {new Date().getFullYear()} MealRo. All rights reserved.
-                                    </p>
-                                </div>
-                            </footer>
+                                {/* Footer */}
+                                <footer className="bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 mb-safe">
+                                    <div className="max-w-2xl mx-auto px-4 py-6">
+                                        <nav className="flex flex-wrap gap-4 text-sm text-slate-500 dark:text-slate-400 mb-4">
+                                            <a href="/about" className="hover:text-primary-600">소개</a>
+                                            <a href="/disclaimer" className="hover:text-primary-600">면책조항</a>
+                                        </nav>
+                                        <p className="text-xs text-slate-400 dark:text-slate-500">
+                                            {/* TODO(LEGAL_REVIEW): 면책 문구 법무 검토 필요 */}
+                                            본 서비스의 영양 정보는 음식군 평균값 기반 추정치이며, 의료적 조언을 대체하지 않습니다.
+                                        </p>
+                                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
+                                            © {new Date().getFullYear()} MealRo. All rights reserved.
+                                        </p>
+                                    </div>
+                                </footer>
 
-                            <BottomNav />
-                        </div>
-                    </OnboardingProvider>
-                </SnackbarProvider>
+                                <BottomNav />
+                            </div>
+                        </OnboardingProvider>
+                    </SnackbarProvider>
+                </AuthProvider>
             </body>
         </html>
     );

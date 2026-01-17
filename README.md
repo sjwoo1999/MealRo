@@ -24,6 +24,11 @@
 
 ## ✨ 핵심 기능 (Key Features)
 
+
+- [x] **2-Tier Auth System**: 익명(Anonymous) 탐색 후 이메일 인증(Verified)을 통한 계정 업그레이드.
+    - **Anonymous**: `device_id` 기반 임시 ID 사용, 데이터 로컬 관리.
+    - **Verified**: SendGrid 이메일 OTP(6자리) 인증, Custom JWT 세션, 데이터 영구 저장 및 동기화.
+- [x] **Secure Session**: HttpOnly, Secure 쿠키 기반의 세션 관리로 XSS 방지.
 - [x] **AI Food Lens**: 음식 사진을 촬영/업로드하면 수 초 내에 음식명과 영양 정보 추정.
 - [x] **Top-N Candidates**: AI 확신(Confidence)이 80% 미만일 경우, **Top-3 후보군**을 제시하여 사용자 선택 유도.
 - [x] **Public Feed (Opt-in)**: 사용자가 동의한 기록만 익명으로 집계하여 "다른 사람들의 식단" 공유.
@@ -43,6 +48,7 @@
 sequenceDiagram
     participant User
     participant Client as Next.js Client
+    participant Auth as Auth System
     participant API as Serverless API
     participant AI as GPT-4o (Vision)
     participant DB as Supabase
@@ -64,9 +70,15 @@ sequenceDiagram
     end
 
     User->>Client: 4. 최종 확정 (Confirm)
-    Client->>API: 5. 데이터 저장 요청
-    API->>DB: INSERT (식단 데이터만)
-    DB-->>API: OK
+    Client->>Auth: 5. 인증 확인 (Anonymous/Verified)
+    alt is Anonymous
+        Auth-->>Client: 업그레이드 유도 (Modal)
+        Client->>User: 회원가입/로그인 요청
+    else is Verified
+        Client->>API: 6. 데이터 저장 요청 (POST /confirm)
+        API->>DB: INSERT (식단 데이터 + UserID)
+        DB-->>API: OK
+    end
 ```
 
 ---
@@ -76,9 +88,10 @@ sequenceDiagram
 | 항목 | 처리 방식 | 비고 |
 | :--- | :--- | :--- |
 | **음식 이미지** | **즉시 폐기** | 분석 전용, 스토리지 저장 X |
-| **사용자 ID** | **익명 (Anonymous)** | `localStorage` 기반 UUID 생성 |
+| **사용자 ID** | **Hybrid (Anon/Verified)** | 초기 `device_id` 사용 → 이메일 인증 시 영구 계정 연결 |
+| **인증 정보** | **Secure Cookie** | JWT (HttpOnly) 저장, 클라이언트 접근 불가 |
 | **식단 데이터** | **선택적 저장** | '저장' 버튼 클릭 시에만 DB 기록 |
-| **민감 정보** | **수집 안 함** | 이메일, 전화번호, 위치 등 수집 X |
+| **민감 정보** | **최소 수집** | 이메일(인증용) 외 불필요한 정보 수집 X |
 
 ---
 
@@ -87,7 +100,10 @@ sequenceDiagram
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | `POST` | `/api/analyze-image` | 이미지를 분석하여 JSON 결과 반환 (Stateless) |
-| `POST` | `/api/food/confirm` | 확정된 식단 데이터를 DB에 기록 |
+| `POST` | `/api/food/confirm` | 확정된 식단 데이터를 DB에 기록 (Auth Required) |
+| `POST` | `/api/auth/send-code` | 이메일 인증 번호(OTP) 발송 |
+| `POST` | `/api/auth/verify-code` | OTP 검증 및 JWT 세션 획득 |
+| `GET` | `/api/auth/me` | 현재 세션 사용자 정보 조회 |
 
 <details>
 <summary><b>🔎 분석 결과 JSON 예시 (펼치기)</b></summary>
@@ -128,9 +144,10 @@ sequenceDiagram
 ## 🛡 보안 & 컴플라이언스 상태
 
 - [x] **익명화 처리**: 모든 데이터는 난수화된 ID로 관리됨
+- [x] **계정 보안**: OTP 기반 Passwordless 인증, SHA256 해싱
+- [x] **세션 보안**: HttpOnly 쿠키 사용으로 XSS 원천 차단
 - [x] **최소 수집 원칙**: 기능 구현에 불필요한 정보 요구 안 함
 - [x] **AI 고지**: "생성형 AI" 사용 사실 명시 (UI 배지, 하단 문구)
-- [ ] **데이터 무결성 검증**: 서버 사이드 세션 검증 (Top Priority for Prod)
 - [ ] **서비스 이용 약관**: 법적 검토 미완료 (`TODO` 상태)
 
 ---
@@ -143,7 +160,11 @@ sequenceDiagram
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key      # Auth 관리용 (Server-side)
 OPENAI_API_KEY=sk-...
+SENDGRID_API_KEY=SG....                              # 이메일 발송용
+EMAIL_FROM=noreply@yourdomain.com                    # 발송자 이메일
+JWT_SECRET=your_jwt_secret_key_min_32_chars          # JWT 서명용
 ```
 
 ### 2. 설치 및 실행
@@ -161,15 +182,19 @@ npm run dev
 1.  **홈 화면**: '음식 스캔' 버튼 클릭
 2.  **이미지 업로드**: 복잡한 찌개류 또는 여러 반찬이 있는 사진 업로드
 3.  **로딩 UX**: "AI가 분석 중..." 타이핑 효과 확인
-4.  **검증 로직**:
-    *   (AI 확신 시) 결과 카드 즉시 표시
-    *   (AI 불확신 시) "이 음식이 맞나요?" 후보군 선택지 표시
-5.  **저장**: 결과 확인 후 '저장' 버튼 클릭 → SnackBar 피드백 확인
+4.  **저장 시도**: 결과 확인 후 '저장' 버튼 클릭
+    *   **예상 동작**: "계정이 필요해요" 모달 팝업 등장 (Anonymous 상태)
+5.  **회원가입/인증**:
+    *   이메일 입력 -> 인증번호 수신 -> 입력 -> 인증 성공
+    *   **예상 동작**: 계정 생성 및 로그인 완료, 대시보드로 이동
+6.  **재시도**: 다시 저장 버튼 클릭 시 정상 저장 및 DB 반영 확인
 
 ---
 
 ## 📚 References
+*   [Email Auth Walkthrough](./walkthrough.md)
 *   [AI System Audit Report](./audit_report.md)
-*   [User Walkthrough](./walkthrough.md)
 *   Supabase Documentation
 *   OpenAI Vision API Guide
+*   SendGrid API Doc
+
