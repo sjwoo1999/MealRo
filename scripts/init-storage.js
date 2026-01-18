@@ -59,7 +59,7 @@ async function initStorage() {
         console.log(`⚠️ Bucket '${BUCKET_NAME}' not found. Creating...`);
 
         const { data, error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
-            public: true, // Make it public for easy access
+            public: false, // Make it PRIVATE for security
             fileSizeLimit: 10485760, // 10MB
             allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/heic']
         });

@@ -52,7 +52,7 @@ function HistoryContent() {
 
             // Fetch meals for the day
             const historyRes = await fetch(
-                `/api/food/history?user_id=${userId}&start_date=${selectedDate}&end_date=${selectedDate}`
+                `/api/user/history?user_id=${userId}&start_date=${selectedDate}&end_date=${selectedDate}`
             );
             const historyData = await historyRes.json();
             if (historyData.success) {
@@ -196,13 +196,28 @@ function HistoryContent() {
                                 className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-4"
                             >
                                 <div className="flex justify-between items-start mb-3">
-                                    <div>
-                                        <span className="text-lg mr-2">
-                                            {MEAL_TYPE_LABELS[meal.meal_type]?.icon}
-                                        </span>
-                                        <span className="font-medium text-slate-900 dark:text-white">
-                                            {MEAL_TYPE_LABELS[meal.meal_type]?.label}
-                                        </span>
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex flex-col">
+                                            <div className="flex items-center">
+                                                <span className="text-lg mr-2">
+                                                    {MEAL_TYPE_LABELS[meal.meal_type]?.icon}
+                                                </span>
+                                                <span className="font-medium text-slate-900 dark:text-white">
+                                                    {MEAL_TYPE_LABELS[meal.meal_type]?.label}
+                                                </span>
+                                            </div>
+                                            {/* Secure Image Display */}
+                                            {(meal as any).image_url && (
+                                                <div className="mt-2 w-20 h-20 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-700 relative group cursor-pointer">
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img
+                                                        src={(meal as any).image_url}
+                                                        alt="식사 사진"
+                                                        className="w-full h-full object-cover transition-transform hover:scale-105"
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                     <span className="text-lg font-bold text-orange-600 dark:text-orange-400">
                                         {meal.total_calories} kcal

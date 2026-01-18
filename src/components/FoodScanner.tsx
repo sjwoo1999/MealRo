@@ -9,6 +9,8 @@ import CandidateSelector from '@/components/CandidateSelector';
 import SimpleSnackbar from '@/components/SimpleSnackbar';
 import { useAuth } from '@/contexts/AuthContext';
 import UpgradePromptModal from '@/components/auth/UpgradePromptModal';
+// Import Supabase Client directly for storage upload
+import { createClient } from '@/lib/supabase/client';
 
 type AnalyzedData = FoodData | { foods: FoodData[] };
 
@@ -74,26 +76,29 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
     const [dragActive, setDragActive] = useState(false);
     const [compressionInfo, setCompressionInfo] = useState<string | null>(null);
 
-    // New State for Multi-Candidate & Confirmation
-    // New State for Multi-Candidate & Confirmation
+    // New State for Multi-Candidate & Confirmation & Upload
     const [imageHash, setImageHash] = useState<string | null>(null);
-    const [storagePath, setStoragePath] = useState<string | null>(null);
+    // Removed API returned storagePath, we generate it on client or handle upload on confirm
+    const [currentFile, setCurrentFile] = useState<File | null>(null); // Keep reference to file for upload
     const [showCandidates, setShowCandidates] = useState(false);
     const [isPublic, setIsPublic] = useState(false);
     const [message, setMessage] = useState<string | null>(null); // For Snackbar
     const { user } = useAuth();
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const [isSaving, setIsSaving] = useState(false); // New saving state
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const supabase = createClient(); // Helper for client-side storage upload
 
     const handleFile = useCallback(async (file: File) => {
         setError(null);
         setAnalyzedData(null);
         setCompressionInfo(null);
         setImageHash(null);
-        setStoragePath(null);
+        // setStoragePath(null); // No longer needed from analysis
         setShowCandidates(false);
         setIsPublic(false);
+        setCurrentFile(null);
 
         // ... existing preview code ...
         const objectUrl = URL.createObjectURL(file);
@@ -104,6 +109,8 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
         try {
             const originalSize = file.size;
             processedFile = await compressImage(file);
+            setCurrentFile(processedFile); // Store for later upload
+
             const newSize = processedFile.size;
 
             if (newSize < originalSize) {
@@ -111,6 +118,7 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
             }
         } catch {
             console.warn('Image compression failed, using original');
+            setCurrentFile(file);
         }
         setIsCompressing(false);
 
@@ -137,10 +145,8 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
             if (data.image_hash) {
                 setImageHash(data.image_hash);
             }
-            // Save storage path if available
-            if (data.storage_path) {
-                setStoragePath(data.storage_path);
-            }
+
+            // Note: Data no longer contains storage_path as we stopped uploading there
 
             if (!hasMultipleFoods(data.data)) {
                 if (needsVerification(data.data.confidence)) {
@@ -156,14 +162,6 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
             setIsAnalyzing(false);
         }
     }, [onAnalysisComplete]);
-
-    // ... (omitting existing handleDrag/Drop/Click which are unchanged) 
-    // Wait, I must provide contiguous block.
-    // I will replace from `const handleFile` start to `handleConfirm` to be safe/clean or just the `handleFile` and `handleConfirm` parts.
-    // Let's replace the state declarations and handleFile first. Actually better to use MultiReplace if possible but I only have ReplaceFileContent.
-    // I will be precise.
-
-    // ... (rest of code)
 
     const handleDrag = useCallback((e: React.DragEvent) => {
         e.preventDefault();
@@ -201,7 +199,7 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
         setError(null);
         setProcessingTime(0);
         setImageHash(null);
-        setStoragePath(null);
+        setCurrentFile(null);
         setShowCandidates(false);
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
@@ -226,27 +224,47 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
     };
 
     const handleConfirm = async () => {
-        if (!analyzedData || !imageHash) {
+        if (!analyzedData || !imageHash || !currentFile) {
             setMessage("저장할 데이터가 부족합니다.");
             return;
         }
 
-        if (!user) {
-            setShowUpgradeModal(true);
-            return;
-        }
+        // Optional: Check user auth if strictly required
+        // if (!user) { setShowUpgradeModal(true); return; }
 
+        setIsSaving(true);
         try {
+            // 1. Upload to Supabase Storage (Private 'food-images' bucket)
+            const anonId = getAnonymousUserId();
+            const today = new Date().toISOString().split('T')[0];
+            const ext = currentFile.name.split('.').pop() || 'jpg';
+            // Path structure: YYYY-MM-DD/anon_id/timestamp_hash.ext
+            // Using anonId in path helps RLS (if we wanted to restrict insert by path)
+            const storagePath = `${today}/${anonId}/${Date.now()}_${imageHash.substring(0, 8)}.${ext}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('food-images')
+                .upload(storagePath, currentFile, {
+                    contentType: currentFile.type,
+                    upsert: false
+                });
+
+            if (uploadError) {
+                console.error("Upload failed", uploadError);
+                throw new Error("이미지 업로드에 실패했습니다.");
+            }
+
+            // 2. Save Metadata to DB via API
             const response = await fetch('/api/food/confirm', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    anonymous_user_id: getAnonymousUserId(),
+                    anonymous_user_id: anonId,
                     image_hash: imageHash,
                     food_data: analyzedData,
                     include_in_public_feed: isPublic,
                     processing_time_ms: processingTime,
-                    storage_path: storagePath // Pass storage path for developer DB
+                    storage_path: storagePath // Now provided by Client after secure upload
                 }),
             });
 
@@ -257,9 +275,11 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
             } else {
                 throw new Error(result.error);
             }
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            setMessage("저장에 실패했습니다.");
+            setMessage(e.message || "저장에 실패했습니다.");
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -322,8 +342,8 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                             className="w-full max-h-64 object-contain"
                         />
 
-                        {/* Compressing/Analyzing Overlay - Premium Liquid Gradient Style */}
-                        {(isCompressing || isAnalyzing) && (
+                        {/* Compressing/Analyzing/Saving Overlay */}
+                        {(isCompressing || isAnalyzing || isSaving) && (
                             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/90 dark:bg-black/90 backdrop-blur-xl transition-all duration-500">
                                 {/* Liquid Gradient Orb */}
                                 <div className="relative w-40 h-40">
@@ -331,10 +351,9 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                                     <div className="absolute top-0 -right-4 w-32 h-32 bg-cyan-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
                                     <div className="absolute -bottom-8 left-10 w-32 h-32 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
 
-                                    {/* Central White/Dark Core to make it look like a ring/orb */}
                                     <div className="absolute inset-4 bg-white/30 dark:bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 shadow-inner">
                                         <div className="text-3xl animate-pulse text-white drop-shadow-lg">
-                                            {isCompressing ? '⚡' : '✨'}
+                                            {isSaving ? '💾' : (isCompressing ? '⚡' : '✨')}
                                         </div>
                                     </div>
                                 </div>
@@ -342,10 +361,12 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                                 {/* Text Content */}
                                 <div className="mt-8 text-center space-y-3 z-20">
                                     <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 animate-gradient-text">
-                                        {isCompressing ? 'Optimizing Image...' : 'Analyzing Food...'}
+                                        {isSaving ? 'Saving...' : (isCompressing ? 'Optimizing...' : 'Analyzing...')}
                                     </h3>
                                     <div className="text-sm text-slate-600 dark:text-slate-300 font-medium px-8 min-h-[40px] flex items-center justify-center">
-                                        {isCompressing ? (
+                                        {isSaving ? (
+                                            <p className="animate-pulse">안전하게 기록을 저장하고 있습니다 🔒</p>
+                                        ) : isCompressing ? (
                                             <p className="animate-pulse">더 선명한 분석을 위해 다듬고 있어요 ✂️</p>
                                         ) : (
                                             <TypewriterMessage
@@ -354,8 +375,7 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                                                     "칼로리를 계산하느라 머리를 굴리는 중... 🤯",
                                                     "이 음식, 정말 맛있어 보이네요! 😋",
                                                     "영양 성분을 꼼꼼히 체크하고 있어요 🔍",
-                                                    "잠시만요, 셰프에게 물어보는 중입니다... 👨‍🍳",
-                                                    "거의 다 됐어요! 비주얼이 훌륭하네요 ✨"
+                                                    "잠시만요, 셰프에게 물어보는 중입니다... 👨‍🍳"
                                                 ]}
                                             />
                                         )}
@@ -365,7 +385,7 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                         )}
 
                         {/* Compression Info Badge */}
-                        {compressionInfo && !isCompressing && !isAnalyzing && (
+                        {compressionInfo && !isCompressing && !isAnalyzing && !isSaving && (
                             <div className="absolute bottom-2 right-2 px-2 py-1 bg-green-500/80 text-white text-xs rounded-full">
                                 📦 {compressionInfo}
                             </div>
@@ -387,13 +407,12 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                         </div>
                     )}
 
-                    {/* Candidate Selector (Shown for Single Food Low Confidence or Manual Trigger) */}
+                    {/* Candidate Selector */}
                     {analyzedData && !hasMultipleFoods(analyzedData) && showCandidates && analyzedData.candidates && analyzedData.candidates.length > 0 && (
                         <CandidateSelector
                             candidates={analyzedData.candidates}
                             onSelect={handleCandidateSelect}
                             onManualInput={() => {
-                                // For MVP/Demo: Just focus on Edit button usage or simple alert
                                 alert('아래 결과 카드의 ✏️ 버튼을 눌러 직접 수정할 수 있습니다.');
                             }}
                         />
@@ -433,9 +452,10 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                     {/* Reset Button */}
                     <button
                         onClick={resetScanner}
+                        disabled={isSaving}
                         className="w-full py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 
                                     text-slate-700 dark:text-slate-300 font-medium
-                                    hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                                    hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
                     >
                         다른 사진 분석하기
                     </button>

@@ -56,40 +56,12 @@ export async function POST(request: NextRequest) {
         // Prepare Promise: OpenAI Analysis
         const analysisPromise = analyzeFoodImageWithOpenAI(base64, file.type);
 
-        // Prepare Promise: Supabase Storage Upload
-        // Path: today/timestamp_hash.jpg
-        const today = new Date().toISOString().split('T')[0];
-        const ext = file.name.split('.').pop() || 'jpg';
-        const storagePath = `${today}/${Date.now()}_${imageHash.substring(0, 8)}.${ext}`;
-
-        const uploadPromise = (async () => {
-            const supabase = supabaseAdmin || supabaseAnon;
-            // Use 'food-images' bucket. Ensure it exists!
-            const { error } = await supabase.storage
-                .from('food-images')
-                .upload(storagePath, file, {
-                    contentType: file.type,
-                    upsert: false
-                });
-
-            if (error) {
-                console.error('Storage upload failed:', error);
-                return null;
-            }
-            return storagePath;
-        })();
-
-        // Execute in Parallel
-        const [analysisResult, uploadedPath] = await Promise.all([
-            analysisPromise,
-            uploadPromise
-        ]);
+        const analysisResult = await analysisPromise;
 
         if (analysisResult.success) {
             return NextResponse.json({
                 ...analysisResult,
-                image_hash: imageHash,
-                storage_path: uploadedPath // Return path to client for confirmation step
+                image_hash: imageHash
             });
         }
 

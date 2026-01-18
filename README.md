@@ -37,9 +37,10 @@ MealRo는 사용자가 복잡한 회원가입 없이 즉시 식단을 기록하�
 *   **Upgrade Funnel**: 데이터 저장 시점에만 자연스럽게 "이메일 간편 인증"을 제안합니다.
 *   **Simple Email Login**: 비밀번호 없이 이메일로 6자리 코드만 받아서 로그인합니다. (보안성 ↑, 분실 걱정 ❌)
 
-### 3. AI Food Lens
+### 3. AI Food Lens & Secure Storage (New!)
 *   **Instant Analysis**: 사진 촬영 즉시 비전 AI가 음식명과 영양소를 추정합니다.
-*   **Interactive Feedback**: AI 확신도가 낮을 경우, 스마트한 후보군을 제시하여 사용자가 정답을 선택하도록 돕습니다.
+*   **Original Image Keeper**: 사용자가 '저장'한 음식 사진 원본은 **Private Storage**에 안전하게 보관되며, 오직 사용자 본인만 접근할 수 있습니다. (Signed URL)
+*   **Smart Privacy**: 분석 단계에서는 이미지를 저장하지 않으며, 사용자가 명시적으로 저장할 때만 업로드됩니다.
 
 ---
 
@@ -53,26 +54,38 @@ sequenceDiagram
     participant API as Serverless API
     participant AI as GPT-4o (Vision)
     participant DB as Supabase
+    participant Storage as Secure Bucket
 
-    User->>Client: 1. 음식 사진 업로드
+    User->>Client: 1. 음식 사진 촬영
     Client->>API: 2. 분석 요청 (POST /analyze)
-    API->>AI: Vision Analysis
+    API->>AI: Vision Analysis (No Storage)
     AI-->>API: JSON Results
-    API-->>Client: 3. 결과 반환 (저장 안 함)
+    API-->>Client: 3. 결과 반환
     
     User->>Client: 4. 결과 확인 및 '저장' 클릭
-    Client->>Client: 5. 인증 상태 확인
+    Client->>Client: 5. 인증 상태 확인 (Optional)
     
-    alt is Anonymous
-        Client->>User: 🔒 업그레이드 모달 표시
-        User->>Auth: 이메일 OTP 인증 수행
-        Auth-->>Client: ✅ Verified (JWT 발급)
-    end
+    Client->>Storage: 6. 원본 이미지 보안 업로드 (Private)
+    Storage-->>Client: Path Return
     
-    Client->>API: 6. 데이터 영구 저장 (POST /confirm)
-    API->>DB: INSERT (Profile + Logs)
+    Client->>API: 7. 데이터 영구 저장 (POST /confirm)
+    API->>DB: INSERT (Profile + Logs + Path)
     DB-->>API: Success
 ```
+
+---
+
+---
+
+## 🔒 보안 및 프라이버시 (Security & Privacy)
+
+### Private Image Storage
+*   모든 원본 이미지는 Public 접근이 차단된 **Private Bucket**에 저장됩니다.
+*   이미지 URL은 무작위 경로로 생성되며, 조회 시에는 짧은 유효기간(1시간)을 가진 **Signed URL**만 사용됩니다.
+
+### Row Level Security (RLS)
+*   PostgreSQL RLS 정책을 통해, 사용자는 오직 **자신의 데이터**에만 접근할 수 있습니다.
+*   이미지 경로가 포함된 로그 테이블(`image_analysis_logs`)은 클라이언트의 직접 조회를 차단하고, 검증된 서버 API(`Service Role`)를 통해서만 접근 가능합니다.
 
 ---
 
