@@ -229,8 +229,50 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
             return;
         }
 
-        // Optional: Check user auth if strictly required
-        // if (!user) { setShowUpgradeModal(true); return; }
+        // Smart Persistance: If user is anonymous, save to Temp & LocalStorage, then Redirect
+        if (!user) {
+            setIsSaving(true);
+            try {
+                // 1. Upload to Temp Storage (Public write allowed)
+                const anonId = getAnonymousUserId();
+                const today = new Date().toISOString().split('T')[0];
+                const ext = currentFile.name.split('.').pop() || 'jpg';
+                // Use 'temp/' prefix to distinguish from permanent uploads
+                const tempStoragePath = `temp/${anonId}/${Date.now()}_${imageHash.substring(0, 8)}.${ext}`;
+
+                const { error: uploadError } = await supabase.storage
+                    .from('food-images')
+                    .upload(tempStoragePath, currentFile, {
+                        contentType: currentFile.type,
+                        upsert: false
+                    });
+
+                if (uploadError) {
+                    console.error("Temp Upload failed", uploadError);
+                    throw new Error("이미지 임시 저장에 실패했습니다.");
+                }
+
+                // 2. Save Metadata to LocalStorage
+                const pendingData = {
+                    storage_path: tempStoragePath,
+                    image_hash: imageHash,
+                    food_data: analyzedData,
+                    processing_time_ms: processingTime,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem('pending_meal_restore', JSON.stringify(pendingData));
+
+                // 3. Show Upgrade Modal (User proceeds to Login)
+                setShowUpgradeModal(true);
+
+            } catch (e: any) {
+                console.error(e);
+                setMessage(e.message || "임시 저장 중 오류가 발생했습니다.");
+            } finally {
+                setIsSaving(false);
+            }
+            return;
+        }
 
         setIsSaving(true);
         try {
@@ -239,7 +281,6 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
             const today = new Date().toISOString().split('T')[0];
             const ext = currentFile.name.split('.').pop() || 'jpg';
             // Path structure: YYYY-MM-DD/anon_id/timestamp_hash.ext
-            // Using anonId in path helps RLS (if we wanted to restrict insert by path)
             const storagePath = `${today}/${anonId}/${Date.now()}_${imageHash.substring(0, 8)}.${ext}`;
 
             const { error: uploadError } = await supabase.storage

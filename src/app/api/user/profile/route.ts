@@ -44,10 +44,8 @@ export async function GET(request: NextRequest) {
 
     if (error) {
         if (error.code === 'PGRST116') { // Not found
-            return NextResponse.json(
-                { success: false, error: { code: 'NOT_FOUND', message: 'Profile not found' } },
-                { status: 404 }
-            );
+            // Return null data instead of 404 to avoid console errors
+            return NextResponse.json({ success: true, data: null });
         }
         return NextResponse.json(
             { success: false, error: { code: 'DB_ERROR', message: error.message } },

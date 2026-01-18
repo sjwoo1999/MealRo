@@ -12,10 +12,7 @@ export async function GET(request: NextRequest) {
             request.headers.get('Authorization')?.replace('Bearer ', '');
 
         if (!token) {
-            return NextResponse.json(
-                { error: 'UNAUTHORIZED', message: '인증이 필요합니다.', user: null },
-                { status: 401 }
-            );
+            return NextResponse.json({ success: true, user: null });
         }
 
         // 토큰 검증
@@ -23,8 +20,8 @@ export async function GET(request: NextRequest) {
         if (!payload) {
             // 쿠키 삭제
             const response = NextResponse.json(
-                { error: 'INVALID_TOKEN', message: '유효하지 않은 토큰입니다.', user: null },
-                { status: 401 }
+                { success: true, user: null },
+                { status: 200 }
             );
             response.cookies.delete('auth_token');
             return response;

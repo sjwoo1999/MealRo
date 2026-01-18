@@ -1,23 +1,19 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import Link from 'next/link';
-import { getAnonymousUserId } from '@/lib/userId';
-import { DailySummaryResponse, FoodData } from '@/types/food';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
+import { useOnboardingCheck } from '@/hooks/useOnboardingCheck';
+import {
+    CalendarIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    Bars3Icon,
+    Squares2X2Icon
+} from '@heroicons/react/24/outline';
 import { NutritionMacros } from '@/components/food/NutritionChart';
 
-interface MealLog {
-    id: string;
-    meal_type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
-    meal_date: string;
-    foods: FoodData[];
-    total_calories: number;
-    total_protein: number;
-    total_carbs: number;
-    total_fat: number;
-    created_at: string;
-}
-
+// Meal Type Icons moved from Home
 const MEAL_TYPE_LABELS: Record<string, { label: string; icon: string }> = {
     breakfast: { label: '아침', icon: '🌅' },
     lunch: { label: '점심', icon: '☀️' },
@@ -25,249 +21,224 @@ const MEAL_TYPE_LABELS: Record<string, { label: string; icon: string }> = {
     snack: { label: '간식', icon: '🍪' },
 };
 
-import { Suspense } from 'react';
+export default function HistoryPage() {
+    const { user, isLoading: authLoading } = useAuth();
+    const { isLoading: onboardingLoading } = useOnboardingCheck();
+    const router = useRouter();
 
-function HistoryContent() {
-    const [summary, setSummary] = useState<DailySummaryResponse | null>(null);
-    const [meals, setMeals] = useState<MealLog[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+    const [history, setHistory] = useState<any | null>(null);
+    const [loading, setLoading] = useState(false);
 
-    const fetchData = useCallback(async () => {
-        setIsLoading(true);
-        const userId = getAnonymousUserId();
+    // UI State: 'list' | 'grid'
+    const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
-        if (!userId) {
-            setIsLoading(false);
+    useEffect(() => {
+        if (!user && !authLoading) {
+            router.replace('/auth?mode=login');
             return;
         }
 
-        try {
-            // Fetch summary
-            const summaryRes = await fetch(`/api/food/summary?user_id=${userId}&date=${selectedDate}`);
-            const summaryData = await summaryRes.json();
-            if (summaryData.success) {
-                setSummary(summaryData.data);
-            }
+        const fetchHistory = async () => {
+            if (!user) return;
+            setLoading(true);
 
             // Fetch meals for the day
-            const historyRes = await fetch(
-                `/api/user/history?user_id=${userId}&start_date=${selectedDate}&end_date=${selectedDate}`
-            );
-            const historyData = await historyRes.json();
-            if (historyData.success) {
-                setMeals(historyData.data.meals);
+            const userId = user.id; // useAuth provides 'id'
+            // NOTE: The API expects 'user_id' which matches 'anonymous_user_id' in logs if not migrated.
+            // If the user upgraded, their ID might be different from the anon ID used in old logs.
+            // But for now, let's assume useAuth().user.id is the correct identifier.
+
+            try {
+                const historyRes = await fetch(
+                    `/api/user/history?user_id=${userId}&start_date=${selectedDate}&end_date=${selectedDate}`
+                );
+                const historyData = await historyRes.json();
+                if (historyData.success) {
+                    setHistory(historyData.data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch history:", error);
+            } finally {
+                setLoading(false);
             }
-        } catch (error) {
-            console.error('Failed to fetch data:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [selectedDate]);
+        };
 
-    useEffect(() => {
-        fetchData();
-    }, [fetchData]);
+        fetchHistory();
+    }, [user, authLoading, router, selectedDate]);
 
-    const changeDate = (offset: number) => {
-        const current = new Date(selectedDate);
-        current.setDate(current.getDate() + offset);
-        setSelectedDate(current.toISOString().split('T')[0]);
+    const handleDateChange = (offset: number) => {
+        const date = new Date(selectedDate);
+        date.setDate(date.getDate() + offset);
+        setSelectedDate(date.toISOString().split('T')[0]);
     };
 
-    const formatDate = (dateStr: string) => {
-        const date = new Date(dateStr);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const target = new Date(dateStr);
-        target.setHours(0, 0, 0, 0);
+    if (authLoading || onboardingLoading) {
+        return <div className="p-8 text-center">Loading...</div>;
+    }
 
-        const diff = Math.round((today.getTime() - target.getTime()) / (1000 * 60 * 60 * 24));
-
-        if (diff === 0) return '오늘';
-        if (diff === 1) return '어제';
-        if (diff === -1) return '내일';
-
-        return date.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' });
-    };
+    if (!user) return null;
 
     return (
-        <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
-            <div className="max-w-md mx-auto px-4 py-6">
-                {/* Header */}
-                <header className="mb-6">
-                    <Link
-                        href="/"
-                        className="inline-flex items-center gap-1 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 mb-4"
-                    >
-                        ← 홈으로
-                    </Link>
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                        📊 식사 기록
-                    </h1>
-                </header>
+        <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                    식사 기록 📅
+                </h1>
 
-                {/* Date Navigator */}
-                <div className="flex items-center justify-between bg-white dark:bg-slate-800 rounded-xl p-3 mb-6 shadow-sm">
+                {/* View Toggle */}
+                <div className="flex bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
                     <button
-                        onClick={() => changeDate(-1)}
-                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"
+                        onClick={() => setViewMode('list')}
+                        className={`p-2 rounded-md transition-all ${viewMode === 'list'
+                            ? 'bg-white dark:bg-slate-600 shadow-sm text-primary-600 dark:text-primary-300'
+                            : 'text-slate-400 hover:text-slate-600'
+                            }`}
+                        aria-label="List View"
                     >
-                        ←
+                        <Bars3Icon className="w-5 h-5" />
                     </button>
-                    <span className="font-medium text-slate-900 dark:text-white">
-                        {formatDate(selectedDate)}
-                    </span>
                     <button
-                        onClick={() => changeDate(1)}
-                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"
+                        onClick={() => setViewMode('grid')}
+                        className={`p-2 rounded-md transition-all ${viewMode === 'grid'
+                            ? 'bg-white dark:bg-slate-600 shadow-sm text-primary-600 dark:text-primary-300'
+                            : 'text-slate-400 hover:text-slate-600'
+                            }`}
+                        aria-label="Grid View"
                     >
-                        →
+                        <Squares2X2Icon className="w-5 h-5" />
                     </button>
                 </div>
+            </div>
 
-                {/* Loading */}
-                {isLoading && (
-                    <div className="text-center py-12">
-                        <div className="animate-spin text-4xl mb-2">⏳</div>
-                        <p className="text-slate-500">불러오는 중...</p>
-                    </div>
-                )}
+            {/* Date Navigation */}
+            <div className="flex items-center justify-between bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 mb-6">
+                <button
+                    onClick={() => handleDateChange(-1)}
+                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                >
+                    <ChevronLeftIcon className="w-5 h-5 text-slate-600" />
+                </button>
+                <div className="flex items-center gap-2 font-semibold text-lg text-slate-900 dark:text-white">
+                    <CalendarIcon className="w-5 h-5 text-primary-500" />
+                    {selectedDate}
+                </div>
+                <button
+                    onClick={() => handleDateChange(1)}
+                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                >
+                    <ChevronRightIcon className="w-5 h-5 text-slate-600" />
+                </button>
+            </div>
 
-                {/* Daily Summary */}
-                {!isLoading && summary && (
-                    <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl p-4 mb-6 text-white">
-                        <div className="flex justify-between items-center mb-3">
-                            <span className="font-medium">일일 섭취량</span>
-                            <span className="text-2xl font-bold">{summary.total_calories} kcal</span>
-                        </div>
+            {loading ? (
+                <div className="text-center py-12">
+                    <div className="animate-spin w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <p className="text-slate-500">기록을 불러오는 중...</p>
+                </div>
+            ) : !history?.meals?.length ? (
+                <div className="text-center py-16 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
+                    <span className="text-4xl mb-3 block">🍽️</span>
+                    <p className="text-slate-500 font-medium">검색된 식사 기록이 없어요</p>
+                    <p className="text-sm text-slate-400 mt-1">오늘 맛있는 음식을 드셨나요?</p>
+                </div>
+            ) : viewMode === 'grid' ? (
+                /* View: Grid Mode */
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {history.meals.map((meal: any) => (
+                        <div
+                            key={meal.id}
+                            className="relative aspect-square bg-slate-100 dark:bg-slate-800 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 group cursor-pointer"
+                        >
+                            {meal.image_url ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                    src={meal.image_url}
+                                    alt="식사 사진"
+                                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                />
+                            ) : (
+                                <div className="flex flex-col items-center justify-center w-full h-full text-slate-300 dark:text-slate-600 bg-slate-50">
+                                    <span className="text-4xl mb-2">{MEAL_TYPE_LABELS[meal.meal_type]?.icon}</span>
+                                </div>
+                            )}
 
-                        {/* Progress Bar */}
-                        <div className="mb-3">
-                            <div className="flex justify-between text-sm text-orange-100 mb-1">
-                                <span>목표 달성률</span>
-                                <span>{summary.goal_achievement}%</span>
+                            {/* Overlay Info */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-3">
+                                <span className="text-white font-bold text-sm truncate">
+                                    {MEAL_TYPE_LABELS[meal.meal_type]?.label}
+                                </span>
+                                <span className="text-white/90 text-xs font-medium">
+                                    {meal.total_calories} kcal
+                                </span>
                             </div>
-                            <div className="h-2 bg-white/30 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-white rounded-full transition-all"
-                                    style={{ width: `${summary.goal_achievement}%` }}
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                /* View: List Mode (Existing) */
+                <div className="space-y-4">
+                    {history.meals.map((meal: any) => (
+                        <div
+                            key={meal.id}
+                            className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-4"
+                        >
+                            <div className="flex justify-between items-start mb-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex flex-col">
+                                        <div className="flex items-center">
+                                            <span className="text-lg mr-2">
+                                                {MEAL_TYPE_LABELS[meal.meal_type]?.icon}
+                                            </span>
+                                            <span className="font-medium text-slate-900 dark:text-white">
+                                                {MEAL_TYPE_LABELS[meal.meal_type]?.label}
+                                            </span>
+                                        </div>
+                                        {/* Secure Image Display */}
+                                        {(meal as any).image_url && (
+                                            <div className="mt-2 w-20 h-20 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-700 relative group cursor-pointer">
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img
+                                                    src={(meal as any).image_url}
+                                                    alt="식사 사진"
+                                                    className="w-full h-full object-cover transition-transform hover:scale-105"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <span className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                                    {meal.total_calories} kcal
+                                </span>
+                            </div>
+
+                            {/* Foods */}
+                            <div className="space-y-2">
+                                {meal.foods.map((food: any, idx: number) => (
+                                    <div key={idx} className="text-sm text-slate-600 dark:text-slate-400">
+                                        • {food.food_name} ({food.nutrition?.calories || 0}kcal)
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Macros */}
+                            <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+                                <NutritionMacros
+                                    nutrition={{
+                                        calories: meal.total_calories,
+                                        protein: meal.total_protein,
+                                        carbohydrates: meal.total_carbs,
+                                        fat: meal.total_fat,
+                                        sodium: 0,
+                                        fiber: 0,
+                                    }}
                                 />
                             </div>
                         </div>
-
-                        <div className="flex gap-4 text-sm text-orange-100">
-                            <span>단백질 {summary.total_protein}g</span>
-                            <span>탄수화물 {summary.total_carbs}g</span>
-                            <span>지방 {summary.total_fat}g</span>
-                        </div>
-
-                        <p className="mt-2 text-xs text-orange-200">
-                            {summary.meal_count}끼 기록됨
-                        </p>
-                    </div>
-                )}
-
-                {/* Empty State */}
-                {!isLoading && meals.length === 0 && (
-                    <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-2xl">
-                        <div className="text-5xl mb-4">📜</div>
-                        <p className="text-lg font-bold text-slate-900 dark:text-white mb-2">
-                            식단 기록이 비어있어요
-                        </p>
-                        <p className="text-slate-500 dark:text-slate-400 mb-6">
-                            저장한 식단 기록이 여기에 표시됩니다.
-                        </p>
-                        <Link
-                            href="/"
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-primary-500 text-white font-medium rounded-xl shadow-md hover:bg-primary-600 transition-colors"
-                        >
-                            음식 스캔하러 가기
-                        </Link>
-                    </div>
-                )}
-
-                {/* Meal List */}
-                {!isLoading && meals.length > 0 && (
-                    <div className="space-y-4">
-                        {meals.map((meal) => (
-                            <div
-                                key={meal.id}
-                                className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-4"
-                            >
-                                <div className="flex justify-between items-start mb-3">
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex flex-col">
-                                            <div className="flex items-center">
-                                                <span className="text-lg mr-2">
-                                                    {MEAL_TYPE_LABELS[meal.meal_type]?.icon}
-                                                </span>
-                                                <span className="font-medium text-slate-900 dark:text-white">
-                                                    {MEAL_TYPE_LABELS[meal.meal_type]?.label}
-                                                </span>
-                                            </div>
-                                            {/* Secure Image Display */}
-                                            {(meal as any).image_url && (
-                                                <div className="mt-2 w-20 h-20 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-700 relative group cursor-pointer">
-                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                    <img
-                                                        src={(meal as any).image_url}
-                                                        alt="식사 사진"
-                                                        className="w-full h-full object-cover transition-transform hover:scale-105"
-                                                    />
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <span className="text-lg font-bold text-orange-600 dark:text-orange-400">
-                                        {meal.total_calories} kcal
-                                    </span>
-                                </div>
-
-                                {/* Foods */}
-                                <div className="space-y-2">
-                                    {meal.foods.map((food, idx) => (
-                                        <div key={idx} className="text-sm text-slate-600 dark:text-slate-400">
-                                            • {food.food_name} ({food.nutrition?.calories || 0}kcal)
-                                        </div>
-                                    ))}
-                                </div>
-
-                                {/* Macros */}
-                                <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
-                                    <NutritionMacros
-                                        nutrition={{
-                                            calories: meal.total_calories,
-                                            protein: meal.total_protein,
-                                            carbohydrates: meal.total_carbs,
-                                            fat: meal.total_fat,
-                                            sodium: 0,
-                                            fiber: 0,
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                {/* Add Meal Button */}
-                <Link
-                    href="/scan"
-                    className="fixed bottom-6 right-6 w-14 h-14 bg-primary-500 text-white rounded-full 
-                        flex items-center justify-center text-2xl shadow-lg hover:bg-primary-600 transition-colors"
-                >
-                    📸
-                </Link>
-            </div>
-        </main>
-    );
-}
-
-export default function HistoryPage() {
-    return (
-        <Suspense fallback={<div className="p-8 text-center text-slate-500">로딩 중...</div>}>
-            <HistoryContent />
-        </Suspense>
+                    ))}
+                </div>
+            )}
+        </div>
     );
 }

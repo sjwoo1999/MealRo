@@ -21,6 +21,12 @@ const MapScript = ({ children }: MapScriptProps) => {
         }
 
         const appKey = process.env.NEXT_PUBLIC_KAKAO_MAPS_APP_KEY;
+        console.log("Kakao Map Check:", {
+            hasKey: !!appKey,
+            keyLength: appKey?.length,
+            keyPrefix: appKey ? appKey.substring(0, 4) + '...' : 'NONE'
+        });
+
         if (!appKey) {
             setError('Kakao Maps App Key가 설정되지 않았습니다.');
             return;

@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import HomeOnboardingSection from '@/components/home/HomeOnboardingSection';
+import RestorePendingMeal from '@/components/home/RestorePendingMeal';
 
 export default function HomePage() {
     return (
         <div className="max-w-2xl mx-auto px-4 py-8">
+            <RestorePendingMeal />
             <HomeOnboardingSection />
             {/* Hero Section */}
             <section className="text-center py-12">
