@@ -117,6 +117,11 @@ export interface UserProfile {
     target_protein: number | null;
     target_carbs: number | null;
     target_fat: number | null;
+    // KDRI 2025 Extensions
+    ffm?: number | null;
+    is_pregnant?: boolean | null;
+    is_breastfeeding?: boolean | null;
+    custom_protein_target?: number | null;
     onboarding_completed: boolean;
     created_at: string;
     updated_at: string;
@@ -130,6 +135,11 @@ export interface OnboardingFormData {
     weight: number;
     activity_level: ActivityLevel;
     goal: Goal;
+    // KDRI 2025 Extensions
+    ffm?: number; // 제지방량 (kg) - Optional (InBody data)
+    is_pregnant?: boolean; // 임신부 여부
+    is_breastfeeding?: boolean; // 수유부 여부
+    custom_protein_target?: number; // 직접 설정한 단백질 목표 (g)
 }
 
 // TDEE 계산 결과 타입

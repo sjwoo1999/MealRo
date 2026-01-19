@@ -6,11 +6,12 @@ import { Card } from '@/components/common';
 
 interface StepGoalProps {
     value?: Goal;
-    onChange: (value: Goal) => void;
+    customProtein?: number;
+    onChange: (value: Goal, customProtein?: number) => void;
     error?: string;
 }
 
-const StepGoal = ({ value, onChange, error }: StepGoalProps) => {
+const StepGoal = ({ value, customProtein, onChange, error }: StepGoalProps) => {
     return (
         <div className="space-y-4 animate-fade-in-up">
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -41,7 +42,7 @@ const StepGoal = ({ value, onChange, error }: StepGoalProps) => {
                                 ${colorClass}
                                 ${bgClass}
                             `}
-                            onClick={() => onChange(option.value)}
+                            onClick={() => onChange(option.value, customProtein)}
                         >
                             <div className="mr-4 text-3xl">{option.emoji}</div>
                             <div className="flex-1">
@@ -74,6 +75,33 @@ const StepGoal = ({ value, onChange, error }: StepGoalProps) => {
             {error && (
                 <p className="text-xs text-red-600 dark:text-red-400 mt-1">{error}</p>
             )}
+
+            {/* Advanced Option: Custom Protein Target */}
+            <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                    선택 사항: 단백질 목표 설정
+                </p>
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg">
+                    <div className="flex flex-col space-y-2">
+                        <label className="text-xs text-slate-500 dark:text-slate-400">
+                            하루 단백질 목표량 (g) - 비워두시면 자동 계산됩니다.
+                        </label>
+                        <input
+                            type="number"
+                            placeholder="예: 120"
+                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all placeholder:text-slate-400"
+                            value={customProtein || ''}
+                            onChange={(e) => {
+                                const val = e.target.value ? parseInt(e.target.value) : undefined;
+                                onChange(value!, val); // Assuming value is set if we are editing this
+                            }}
+                        />
+                        <p className="text-xs text-slate-400">
+                            * KDRI 2025 권장량: 체중 kg당 0.91g (노인 1.2g) / 운동 시 1.6~2.0g
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };

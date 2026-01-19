@@ -7,7 +7,7 @@ import {
     OnboardingStep,
     TdeeCalculationResult
 } from '@/types/user';
-import { calculateAll } from '@/lib/tdee-calculator';
+import { calculateKDRIResults } from '@/lib/kdri-calculator';
 import { validateOnboardingForm } from '@/lib/validators/onboarding';
 import { Button } from '@/components/common';
 
@@ -71,7 +71,7 @@ const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
 
         if (step === 4) {
             // Calculate and show result
-            const calculated = calculateAll(formData as OnboardingFormData);
+            const calculated = calculateKDRIResults(formData as OnboardingFormData);
             setResult(calculated);
             setStep('complete');
         } else {
@@ -146,7 +146,14 @@ const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
             case 3:
                 return <StepActivityLevel value={formData.activity_level} onChange={(val) => updateData({ activity_level: val })} error={errors.activityLevel} />;
             case 4:
-                return <StepGoal value={formData.goal} onChange={(val) => updateData({ goal: val })} error={errors.goal} />;
+                return (
+                    <StepGoal
+                        value={formData.goal}
+                        customProtein={formData.custom_protein_target || undefined}
+                        onChange={(val, protein) => updateData({ goal: val, custom_protein_target: protein })}
+                        error={errors.goal}
+                    />
+                );
             case 'complete':
                 if (!result) return null;
                 return (

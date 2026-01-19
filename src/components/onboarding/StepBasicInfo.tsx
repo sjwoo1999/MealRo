@@ -5,8 +5,18 @@ import { Gender } from '@/types/user';
 import { Card, Input } from '@/components/common';
 
 interface StepBasicInfoProps {
-    data: { gender?: Gender; age?: number };
-    onChange: (data: { gender?: Gender; age?: number }) => void;
+    data: {
+        gender?: Gender;
+        age?: number;
+        is_pregnant?: boolean;
+        is_breastfeeding?: boolean;
+    };
+    onChange: (data: {
+        gender?: Gender;
+        age?: number;
+        is_pregnant?: boolean;
+        is_breastfeeding?: boolean;
+    }) => void;
     errors?: Record<string, string>;
 }
 
@@ -44,6 +54,35 @@ const StepBasicInfo = ({ data, onChange, errors }: StepBasicInfoProps) => {
                     <p className="text-xs text-red-500 mt-1">{errors.gender}</p>
                 )}
             </div>
+
+            {/* Pregnancy/Lactation options for Female */}
+            {data.gender === 'female' && (
+                <div className="space-y-3 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg">
+                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        추가 상태 선택 (해당하는 경우만)
+                    </p>
+                    <div className="flex flex-col gap-2">
+                        <label className="flex items-center space-x-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={data.is_pregnant || false}
+                                onChange={(e) => onChange({ ...data, is_pregnant: e.target.checked })}
+                                className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                            />
+                            <span className="text-sm text-slate-600 dark:text-slate-400">현재 임신 중입니다</span>
+                        </label>
+                        <label className="flex items-center space-x-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={data.is_breastfeeding || false}
+                                onChange={(e) => onChange({ ...data, is_breastfeeding: e.target.checked })}
+                                className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                            />
+                            <span className="text-sm text-slate-600 dark:text-slate-400">현재 수유 중입니다</span>
+                        </label>
+                    </div>
+                </div>
+            )}
 
             <div className="space-y-2">
                 <Input

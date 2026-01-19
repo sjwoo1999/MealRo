@@ -4,6 +4,7 @@
 [![Status](https://img.shields.io/badge/Status-Technical_Demo-orange)]()
 [![AI](https://img.shields.io/badge/AI-GPT--4o_Vision-blue)]()
 [![Privacy](https://img.shields.io/badge/Privacy-Privacy--First-green)]()
+[![Standards](https://img.shields.io/badge/Standards-KDRI_2025-red)]()
 
 ---
 
@@ -37,10 +38,25 @@ MealRo는 사용자가 복잡한 회원가입 없이 즉시 식단을 기록하�
 *   **Upgrade Funnel**: 데이터 저장 시점에만 자연스럽게 "이메일 간편 인증"을 제안합니다.
 *   **Simple Email Login**: 비밀번호 없이 이메일로 6자리 코드만 받아서 로그인합니다. (보안성 ↑, 분실 걱정 ❌)
 
-### 3. AI Food Lens & Secure Storage (New!)
+### 3. AI Food Lens & Secure Storage 📸
 *   **Instant Analysis**: 사진 촬영 즉시 비전 AI가 음식명과 영양소를 추정합니다.
 *   **Original Image Keeper**: 사용자가 '저장'한 음식 사진 원본은 **Private Storage**에 안전하게 보관되며, 오직 사용자 본인만 접근할 수 있습니다. (Signed URL)
 *   **Smart Privacy**: 분석 단계에서는 이미지를 저장하지 않으며, 사용자가 명시적으로 저장할 때만 업로드됩니다.
+
+### 4. KDRI 2025 Nutrient Engine (New!) 🇰🇷
+기존의 서구권 중심 공식(Mifflin-St Jeor)을 넘어, 한국인의 신체 특성과 **2025 한국인 영양소 섭취기준(KDRI)**을 완벽하게 구현했습니다.
+
+*   **정밀 에너지 요구량(EER) 계산**:
+    *   **연령별 최적화**: 성인(19-64세)과 노인(65세+)의 대사 차이를 반영한 별도 공식 적용.
+    *   **InBody 데이터 연동**: 체성분(제지방량, FFM) 데이터가 있는 경우, 더욱 정밀한 기초대사량을 산출합니다.
+*   **생애주기/목표별 단백질 타겟팅**:
+    *   **근감소증 예방**: 65세 이상 노년층에게는 체중당 **1.2g**의 고단백질 권장.
+    *   **모성 건강**: 임신부(+10g) 및 수유부(+25g)를 위한 안전 부가량 자동 계산.
+    *   **스포츠 영양**: 고강도 활동/증량 목표 시 체중당 **1.6~2.0g**까지 동적 상향.
+
+### 5. UX/UI Enhancements 🎨
+*   **Smart Data Persistence**: 비로그인 상태에서 기록한 식단 데이터는 `localStorage`에 임시 보관되며, 로그인 시 `RestorePendingMeal` 컴포넌트를 통해 내 계정으로 완벽하게 이관됩니다.
+*   **History Gallery**: 식단 히스토리를 인스타그램 스타일의 **Grid View**로 전환하여 볼 수 있어, 나의 식생활을 더 직관적이고 아름답게 파악할 수 있습니다.
 
 ---
 
