@@ -1,7 +1,7 @@
 'use client';
 
 import { AlertCircle, RotateCw } from 'lucide-react';
-import { Button } from './Button';
+import Button from './Button';
 
 interface ErrorStateProps {
     title?: string;

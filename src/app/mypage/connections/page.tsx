@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { ChevronLeft, Smartphone, Watch } from 'lucide-react';
-import { Card } from '@/components/common/Card';
+import Card from '@/components/common/Card';
 
 export default function ConnectionsPage() {
     const apps = [
@@ -49,8 +49,8 @@ export default function ConnectionsPage() {
                             </div>
                             <button
                                 className={`px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${app.connected
-                                        ? 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                                        : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                                    ? 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                    : 'bg-emerald-500 text-white hover:bg-emerald-600'
                                     }`}
                             >
                                 {app.connected ? '해제' : '연결'}

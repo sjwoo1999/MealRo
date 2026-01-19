@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Card } from '@/components/common/Card';
+import Card from '@/components/common/Card';
 import { ChevronLeft, ChevronRight, Info } from 'lucide-react';
 
 export default function InsightsPage() {
@@ -17,8 +17,8 @@ export default function InsightsPage() {
                     <button
                         onClick={() => setPeriod('weekly')}
                         className={`px-3 py-1.5 rounded-md transition-all ${period === 'weekly'
-                                ? 'bg-white dark:bg-slate-600 shadow-sm text-slate-900 dark:text-white'
-                                : 'text-slate-500 hover:text-slate-700'
+                            ? 'bg-white dark:bg-slate-600 shadow-sm text-slate-900 dark:text-white'
+                            : 'text-slate-500 hover:text-slate-700'
                             }`}
                     >
                         주간
@@ -26,8 +26,8 @@ export default function InsightsPage() {
                     <button
                         onClick={() => setPeriod('monthly')}
                         className={`px-3 py-1.5 rounded-md transition-all ${period === 'monthly'
-                                ? 'bg-white dark:bg-slate-600 shadow-sm text-slate-900 dark:text-white'
-                                : 'text-slate-500 hover:text-slate-700'
+                            ? 'bg-white dark:bg-slate-600 shadow-sm text-slate-900 dark:text-white'
+                            : 'text-slate-500 hover:text-slate-700'
                             }`}
                     >
                         월간

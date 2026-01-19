@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { ChevronLeft, Info } from 'lucide-react';
 import Link from 'next/link';
-import { Button } from '@/components/common/Button';
-import { Card } from '@/components/common/Card';
+import Button from '@/components/common/Button';
+import Card from '@/components/common/Card';
 
 export default function GoalsEditPage() {
     const [goal, setGoal] = useState<'lose' | 'maintain' | 'gain'>('lose');
@@ -37,8 +37,8 @@ export default function GoalsEditPage() {
                                 key={item.id}
                                 onClick={() => setGoal(item.id as any)}
                                 className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${goal === item.id
-                                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400'
-                                        : 'border-transparent bg-white dark:bg-slate-800 shadow-sm'
+                                    ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400'
+                                    : 'border-transparent bg-white dark:bg-slate-800 shadow-sm'
                                     }`}
                             >
                                 <span className="text-2xl mb-1">{item.emoji}</span>

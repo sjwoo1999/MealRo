@@ -5,8 +5,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import MealTabs from '@/components/MealTabs';
 import FilterChips from '@/components/FilterChips';
 import RecoCard from '@/components/RecoCard';
-import SkeletonCard from '@/components/SkeletonCard';
-import EmptyState from '@/components/EmptyState';
+import { CardSkeleton } from '@/components/common/SkeletonLoader';
+import EmptyState from '@/components/common/EmptyState';
 import { createClient } from '@/lib/supabase/client';
 import { computeGrade } from '@/lib/grade';
 import { trackPageView, trackExcludedItemEncountered } from '@/lib/analytics';
@@ -148,7 +148,9 @@ export default function MealContent() {
                 {/* Loading State */}
                 {isLoading && (
                     <div className="space-y-4">
-                        <SkeletonCard count={4} />
+                        {Array.from({ length: 4 }).map((_, i) => (
+                            <CardSkeleton key={i} />
+                        ))}
                     </div>
                 )}
 

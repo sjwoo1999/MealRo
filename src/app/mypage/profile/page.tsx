@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { ChevronLeft } from 'lucide-react';
 import Link from 'next/link';
-import { Button } from '@/components/common/Button';
-import { Input } from '@/components/common/Input';
-import { Select } from '@/components/common/Select';
+import Button from '@/components/common/Button';
+import Input from '@/components/common/Input';
+import Select from '@/components/common/Select';
 
 export default function ProfileEditPage() {
     const [formData, setFormData] = useState({
@@ -17,8 +17,8 @@ export default function ProfileEditPage() {
         ffm: '38', // Optional
     });
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
+    // Handle change helper
+    const updateField = (name: string, value: string) => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
@@ -47,7 +47,7 @@ export default function ProfileEditPage() {
                         label="이름 (닉네임)"
                         name="name"
                         value={formData.name}
-                        onChange={handleChange}
+                        onChange={(val) => updateField('name', val)}
                     />
 
                     <div className="grid grid-cols-2 gap-4">
@@ -56,13 +56,12 @@ export default function ProfileEditPage() {
                             name="birthdate"
                             type="date"
                             value={formData.birthdate}
-                            onChange={handleChange}
+                            onChange={(val) => updateField('birthdate', val)}
                         />
                         <Select
                             label="성별"
-                            name="gender"
                             value={formData.gender}
-                            onChange={handleChange}
+                            onChange={(val) => updateField('gender', val)}
                             options={[
                                 { value: 'male', label: '남성' },
                                 { value: 'female', label: '여성' },
@@ -76,14 +75,14 @@ export default function ProfileEditPage() {
                             name="height"
                             type="number"
                             value={formData.height}
-                            onChange={handleChange}
+                            onChange={(val) => updateField('height', val)}
                         />
                         <Input
                             label="몸무게 (kg)"
                             name="weight"
                             type="number"
                             value={formData.weight}
-                            onChange={handleChange}
+                            onChange={(val) => updateField('weight', val)}
                         />
                     </div>
 
@@ -92,7 +91,7 @@ export default function ProfileEditPage() {
                         name="ffm"
                         type="number"
                         value={formData.ffm}
-                        onChange={handleChange}
+                        onChange={(val) => updateField('ffm', val)}
                         hint="입력 시 KDRI 정밀 공식을 사용합니다."
                     />
                 </div>

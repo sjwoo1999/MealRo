@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Loader2, CheckCircle2 } from 'lucide-react';
-import { Card } from '@/components/common/Card';
+import Card from '@/components/common/Card';
 
 interface ProgressStep {
     label: string;

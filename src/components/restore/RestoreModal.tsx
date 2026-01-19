@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { Cloud, Check, Loader2 } from 'lucide-react';
-import { Card } from '@/components/common/Card';
-import { Button } from '@/components/common/Button';
+import Card from '@/components/common/Card';
+import Button from '@/components/common/Button';
 
 interface RestoreModalProps {
     isOpen: boolean;
