@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     },
 };
 
-import BottomNav from '@/components/layout/BottomNav';
+import BottomNavigation from '@/components/layout/BottomNavigation';
 
 import { AuthProvider } from '@/contexts/AuthContext';
 import Header from '@/components/layout/Header';
@@ -59,7 +59,7 @@ export default function RootLayout({
                                     </div>
                                 </footer>
 
-                                <BottomNav />
+                                <BottomNavigation />
                             </div>
                         </OnboardingProvider>
                     </SnackbarProvider>
