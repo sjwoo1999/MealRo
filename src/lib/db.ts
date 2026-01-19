@@ -1,12 +1,13 @@
 import Dexie, { Table } from 'dexie';
 
 export interface OfflineMeal {
-    id?: number; // Auto-incremented ID
+    id?: number;
     name: string;
     calories: number;
     image_url?: string;
     timestamp: Date;
-    synced: boolean; // True if synced to Supabase
+    synced: boolean;
+    food_data?: any; // Store full analysis JSON
 }
 
 export interface UserSettings {
@@ -21,9 +22,10 @@ export class MealRoDB extends Dexie {
     constructor() {
         super('MealRoDB');
         this.version(1).stores({
-            meals: '++id, timestamp, synced', // Primary key and indexes
-            settings: 'key' // Key-value store for settings
+            meals: '++id, timestamp, synced',
+            settings: 'key'
         });
+        // Version 2 upgrade if needed in future
     }
 }
 

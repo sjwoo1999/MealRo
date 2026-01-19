@@ -21,6 +21,8 @@ import BottomNavigation from '@/components/layout/BottomNavigation';
 import { AuthProvider } from '@/contexts/AuthContext';
 import Header from '@/components/layout/Header';
 
+import RestoreManager from '@/components/restore/RestoreManager';
+
 export default function RootLayout({
     children,
 }: {

@@ -4,13 +4,14 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { FoodData, FoodAnalysisResponse, needsVerification, hasMultipleFoods } from '@/types/food';
 import { getAnonymousUserId } from '@/lib/userId';
 import { compressImage, formatFileSize } from '@/lib/image-compress';
-import AnalysisResult from '@/components/food/AnalysisResult';
+import FoodAnalysisResult from '@/components/scan/FoodAnalysisResult';
 import CandidateSelector from '@/components/CandidateSelector';
 import SimpleSnackbar from '@/components/SimpleSnackbar';
 import { useAuth } from '@/contexts/AuthContext';
 import UpgradePromptModal from '@/components/auth/UpgradePromptModal';
 // Import Supabase Client directly for storage upload
 import { createClient } from '@/lib/supabase/client';
+import { db } from '@/lib/db';
 
 type AnalyzedData = FoodData | { foods: FoodData[] };
 
@@ -252,15 +253,28 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                     throw new Error("이미지 임시 저장에 실패했습니다.");
                 }
 
-                // 2. Save Metadata to LocalStorage
-                const pendingData = {
-                    storage_path: tempStoragePath,
-                    image_hash: imageHash,
-                    food_data: analyzedData,
-                    processing_time_ms: processingTime,
-                    timestamp: Date.now()
-                };
-                localStorage.setItem('pending_meal_restore', JSON.stringify(pendingData));
+                // 2. Save Metadata to Dexie (Offline DB)
+                try {
+                    const isMulti = hasMultipleFoods(analyzedData);
+                    const mealName = isMulti
+                        ? `${analyzedData.foods[0].food_name} 외 ${analyzedData.foods.length - 1}개`
+                        : analyzedData.food_name;
+
+                    const totalCalories = isMulti
+                        ? analyzedData.foods.reduce((acc, f) => acc + f.nutrition.calories, 0)
+                        : analyzedData.nutrition.calories;
+
+                    await db.meals.add({
+                        name: mealName || 'Unknown Food',
+                        calories: totalCalories || 0,
+                        image_url: tempStoragePath,
+                        timestamp: new Date(),
+                        synced: false,
+                        food_data: analyzedData
+                    });
+                } catch (dbError) {
+                    console.error("Dexie save failed", dbError);
+                }
 
                 // 3. Show Upgrade Modal (User proceeds to Login)
                 setShowUpgradeModal(true);
@@ -462,13 +476,15 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                     {/* Results */}
                     {analyzedData && (
                         <>
-                            <AnalysisResult
+                            <FoodAnalysisResult
+                                imageSrc={previewUrl}
                                 data={analyzedData}
-                                processingTimeMs={processingTime}
-                                onEdit={(editedData) => {
-                                    setAnalyzedData(editedData);
+                                onSave={(finalData) => {
+                                    setAnalyzedData(finalData as any); // Update local state with final edit
+                                    // Slight delay to allow state update before save
+                                    setTimeout(handleConfirm, 0);
                                 }}
-                                onSave={handleConfirm}
+                                onRetake={resetScanner}
                             />
 
                             {/* Confirmation Options */}
