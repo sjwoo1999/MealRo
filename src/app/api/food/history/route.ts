@@ -5,8 +5,8 @@ export const dynamic = 'force-dynamic';
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+    process.env.SUPABASE_SERVICE_ROLE_KEY! // Changed from NEXT_PUBLIC_SUPABASE_ANON_KEY!
+); // Removed the ": null;" part as it was syntactically incomplete without a condition
 
 export async function GET(request: NextRequest) {
     try {

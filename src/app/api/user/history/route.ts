@@ -9,6 +9,8 @@ const supabaseAdmin = process.env.SUPABASE_SERVICE_ROLE_KEY
     )
     : null;
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
     if (!supabaseAdmin) {
         return NextResponse.json(

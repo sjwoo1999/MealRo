@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { DailySummaryResponse } from '@/types/food';
 
-export const dynamic = 'force-dynamic';
+// export const dynamic = 'force-dynamic'; // Moved to bottom or just remove duplicate
 
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,6 +16,8 @@ const DAILY_GOALS = {
     carbs: 300,
     fat: 65,
 };
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
     try {

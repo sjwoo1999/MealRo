@@ -4,6 +4,8 @@ import { calculateAll } from '@/lib/tdee-calculator';
 import { validateOnboardingForm } from '@/lib/validators/onboarding';
 import { OnboardingFormData, UserProfile } from '@/types/user';
 
+export const dynamic = 'force-dynamic';
+
 // NOTE: Since I don't have access to the server-side cookie client setup from the prompt context, 
 // I will use a standard pattern. If there's a specific '@/lib/supabase/server' utility, I would use that.
 // For now, I'll rely on the client or environment variables. 
