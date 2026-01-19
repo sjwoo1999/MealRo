@@ -60,6 +60,24 @@ Precise control over AI results:
 
 ---
 
+## 🎨 Design Philosophy & UX/UI
+This project isn't just about code; it's built on core **UX Laws** to ensure high conversion and retention.
+
+### 1. Progressive Disclosure (Miller’s Law)
+*   **Problem**: Asking for weight/height/age upfront causes high drop-off.
+*   **Solution**: We defer sign-up until **after** the user experiences value (the "Aha! Moment"). The `Onboarding` flow is broken into small, digestible chunks to reduce cognitive load.
+
+### 2. Fitts’s Law & Thumb Zone
+*   **Implementation**: Key actions like the **Scan Button (FAB)** and **Portion Slider** are placed in the bottom 30% of the screen, easily reachable with a thumb.
+
+### 3. Jacob’s Law
+*   **Consistency**: The "MyPage" and "Feed" layouts follow standard mental models (similar to Instagram/Toss), reducing the learning curve for new users.
+
+### 4. Peak-End Rule
+*   **Delight**: The analysis completion isn't just a spinner; it uses a standardized `AnalysisProgress` (Optimistic UI) to keep users engaged, ending with a satisfying result card.
+
+---
+
 ## 📂 Project Structure
 
 ```plaintext
