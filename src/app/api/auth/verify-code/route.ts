@@ -55,6 +55,8 @@ export async function POST(request: NextRequest) {
                     device_ids: deviceId ? [deviceId] : [],
                     login_count: 1,
                     last_login_at: new Date().toISOString(),
+                    // Fix: Generate random ID to satisfy NOT NULL constraint
+                    anonymous_user_id: crypto.randomUUID(),
                 })
                 .select()
                 .single();
