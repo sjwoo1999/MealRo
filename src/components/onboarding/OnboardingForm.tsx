@@ -20,6 +20,7 @@ import TdeeResult from './TdeeResult';
 
 interface OnboardingFormProps {
     onComplete: (profile: UserProfile) => void;
+    prefilledGoal?: string;
 }
 
 const INITIAL_DATA: Partial<OnboardingFormData> = {
@@ -29,10 +30,13 @@ const INITIAL_DATA: Partial<OnboardingFormData> = {
     weight: 70,
 };
 
-const OnboardingForm = ({ onComplete }: OnboardingFormProps) => {
+const OnboardingForm = ({ onComplete, prefilledGoal }: OnboardingFormProps) => {
     // State
     const [step, setStep] = useState<OnboardingStep>(1);
-    const [formData, setFormData] = useState<Partial<OnboardingFormData>>(INITIAL_DATA);
+    const [formData, setFormData] = useState<Partial<OnboardingFormData>>({
+        ...INITIAL_DATA,
+        goal: prefilledGoal as any
+    });
     const [result, setResult] = useState<TdeeCalculationResult | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
