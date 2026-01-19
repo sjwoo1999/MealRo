@@ -4,8 +4,10 @@ import { SnackbarProvider } from '@/components/Snackbar';
 import { OnboardingProvider } from '@/contexts/OnboardingContext';
 
 export const metadata: Metadata = {
-    title: 'MealRo - 건강한 끼니 추천',
-    description: '아침, 점심, 저녁 건강한 끼니를 추천해드립니다. 음식군 평균 영양값 기반의 추정치입니다.',
+    title: 'MealRo',
+    description: 'AI 기반 식단 관리 솔루션',
+    manifest: '/manifest.json',
+    themeColor: '#10b981',
     keywords: ['끼니 추천', '건강 식단', '영양 정보', '아침', '점심', '저녁'],
     openGraph: {
         title: 'MealRo - 건강한 끼니 추천',
