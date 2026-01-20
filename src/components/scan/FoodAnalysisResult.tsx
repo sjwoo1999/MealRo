@@ -39,6 +39,7 @@ export default function FoodAnalysisResult({ imageSrc, data, onSave, onRetake }:
     // Local state for optimistic updates
     const [foods, setFoods] = useState<VisualFoodData[]>(() => normalizeFoods(data));
     const [selectedFoodId, setSelectedFoodId] = useState<string | null>(null);
+    const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number } | undefined>(undefined);
 
     // Totals
     const totalCalories = foods.reduce((sum, f) => sum + Math.round(f.nutrition.calories), 0);
@@ -50,10 +51,11 @@ export default function FoodAnalysisResult({ imageSrc, data, onSave, onRetake }:
             id: food.id || `food-${index}`,
             label: food.food_name,
             // Distribute boxes: Single (center), Multiple (grid-ish)
-            x: foods.length === 1 ? 25 : (index % 2) * 50 + 10,
-            y: foods.length === 1 ? 25 : Math.floor(index / 2) * 40 + 20,
-            width: foods.length === 1 ? 50 : 35,
-            height: foods.length === 1 ? 50 : 35,
+            // Using normalized coordinates (0-1)
+            x: foods.length === 1 ? 0.25 : ((index % 2) * 0.5) + 0.1,
+            y: foods.length === 1 ? 0.25 : (Math.floor(index / 2) * 0.4) + 0.2,
+            width: foods.length === 1 ? 0.5 : 0.35,
+            height: foods.length === 1 ? 0.5 : 0.35,
         }));
     }, [foods]);
 
@@ -107,12 +109,25 @@ export default function FoodAnalysisResult({ imageSrc, data, onSave, onRetake }:
             {/* 1. Visual Analysis View */}
             <div className="relative w-full aspect-square bg-slate-100 dark:bg-slate-800 overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={imageSrc} alt="Analysis" className="w-full h-full object-contain" />
+                <img
+                    src={imageSrc}
+                    alt="Analysis"
+                    className="w-full h-full object-contain"
+                    onLoad={(e) => {
+                        const img = e.currentTarget;
+                        setImageDimensions({
+                            width: img.naturalWidth,
+                            height: img.naturalHeight
+                        });
+                    }}
+                />
 
                 {/* Bounding Boxes */}
                 <BoundingBoxOverlay
                     boxes={boxes}
                     onBoxClick={setSelectedFoodId}
+                    imageDimensions={imageDimensions}
+                    objectFit="contain"
                 />
 
                 {/* Total Overlay */}
