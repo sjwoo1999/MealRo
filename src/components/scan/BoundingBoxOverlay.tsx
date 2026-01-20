@@ -132,7 +132,7 @@ export default function BoundingBoxOverlay({
                     <button
                         key={box.id}
                         onClick={() => onBoxClick(box.id)}
-                        className="absolute border-2 border-emerald-400 bg-emerald-400/10 rounded-lg pointer-events-auto hover:bg-emerald-400/20 active:bg-emerald-400/30 transition-colors group"
+                        className="absolute border-2 border-emerald-500 bg-emerald-500/10 rounded-lg pointer-events-auto hover:bg-emerald-500/20 active:bg-emerald-500/30 transition-colors group z-10"
                         style={{
                             left: `${left}px`,
                             top: `${top}px`,
@@ -140,13 +140,15 @@ export default function BoundingBoxOverlay({
                             height: `${height}px`,
                         }}
                     >
-                        {/* Label Tag */}
-                        <span className="absolute -top-7 left-0 bg-emerald-500 text-white text-xs font-bold px-2 py-1 rounded-md shadow-sm opacity-90 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                            {box.label}
-                        </span>
+                        {/* Label Tag - Integrated Style */}
+                        <div className="absolute -top-[1.5em] left-[-2px] flex items-center">
+                            <span className="bg-emerald-500 text-white text-xs font-bold px-2 py-0.5 rounded-t-md shadow-sm whitespace-nowrap">
+                                {box.label}
+                            </span>
+                        </div>
 
-                        {/* Edit Handle (Visual only for now) */}
-                        <div className="absolute -bottom-2 -right-2 w-4 h-4 bg-white border border-emerald-500 rounded-full shadow-sm" />
+                        {/* Edit Handle - Corner Style */}
+                        <div className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-emerald-500 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity" />
                     </button>
                 );
             })}
