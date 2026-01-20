@@ -120,9 +120,50 @@ export default function BoundingBoxOverlay({
 
     return (
         <div ref={containerRef} className="absolute inset-0 pointer-events-none overflow-hidden">
+            {/* 1. Backdrop Spotlight Layer */}
+            <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: 'none' }}>
+                <defs>
+                    <mask id="spotlight-mask">
+                        {/* White fills everything (opaque) */}
+                        <rect x="0" y="0" width="100%" height="100%" fill="white" />
+                        {/* Black ellipses make holes (transparent) */}
+                        {boxes.map((box) => {
+                            const cx = renderedImage.x + (box.x * renderedImage.width) + (box.width * renderedImage.width) / 2;
+                            const cy = renderedImage.y + (box.y * renderedImage.height) + (box.height * renderedImage.height) / 2;
+                            const rx = (box.width * renderedImage.width) / 2;
+                            const ry = (box.height * renderedImage.height) / 2;
+                            return (
+                                <ellipse
+                                    key={box.id}
+                                    cx={cx}
+                                    cy={cy}
+                                    rx={rx}
+                                    ry={ry}
+                                    fill="black"
+                                    filter="url(#soft-edge)"
+                                />
+                            );
+                        })}
+                    </mask>
+                    <filter id="soft-edge">
+                        <feGaussianBlur stdDeviation="15" />
+                    </filter>
+                </defs>
+
+                {/* The Dark Overlay applying the mask */}
+                <rect
+                    x="0"
+                    y="0"
+                    width="100%"
+                    height="100%"
+                    fill="black"
+                    fillOpacity="0.4"
+                    mask="url(#spotlight-mask)"
+                />
+            </svg>
+
+            {/* 2. Interactive Labels & Areas */}
             {boxes.map((box) => {
-                // Map normalized coords (0-1) to rendered pixel space
-                // formula: pixel = offset + (normalized * dimension)
                 const left = renderedImage.x + (box.x * renderedImage.width);
                 const top = renderedImage.y + (box.y * renderedImage.height);
                 const width = box.width * renderedImage.width;
@@ -132,7 +173,7 @@ export default function BoundingBoxOverlay({
                     <button
                         key={box.id}
                         onClick={() => onBoxClick(box.id)}
-                        className="absolute border-2 border-emerald-500 bg-emerald-500/10 rounded-lg pointer-events-auto hover:bg-emerald-500/20 active:bg-emerald-500/30 transition-colors group z-10"
+                        className="absolute pointer-events-auto group outline-none"
                         style={{
                             left: `${left}px`,
                             top: `${top}px`,
@@ -140,15 +181,16 @@ export default function BoundingBoxOverlay({
                             height: `${height}px`,
                         }}
                     >
-                        {/* Label Tag - Integrated Style */}
-                        <div className="absolute -top-[1.5em] left-[-2px] flex items-center">
-                            <span className="bg-emerald-500 text-white text-xs font-bold px-2 py-0.5 rounded-t-md shadow-sm whitespace-nowrap">
+                        {/* Label Tag - Floating Style */}
+                        {/* Centered at the bottom of the spotlight or top-left */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-90 group-hover:opacity-100 transition-opacity">
+                            <span className="bg-black/50 backdrop-blur-md text-white border border-white/20 text-sm font-bold px-3 py-1.5 rounded-full shadow-lg whitespace-nowrap flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                                 {box.label}
                             </span>
                         </div>
 
-                        {/* Edit Handle - Corner Style */}
-                        <div className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-emerald-500 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity" />
+                        {/* Invisible click area is the full box */}
                     </button>
                 );
             })}
