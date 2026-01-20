@@ -10,14 +10,24 @@ export default function Header() {
 
     return (
         <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 transition-colors">
-            <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-                <Link
-                    href="/"
-                    className="flex items-center gap-2 text-xl font-bold text-green-600 dark:text-green-400 hover:opacity-80 transition-opacity"
-                >
-                    <span aria-hidden="true">🍽️</span>
-                    <span>MealRo</span>
-                </Link>
+            <div className="max-w-2xl lg:max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-8">
+                    <Link
+                        href="/"
+                        className="flex items-center gap-2 text-xl font-bold text-green-600 dark:text-green-400 hover:opacity-80 transition-opacity"
+                    >
+                        <span aria-hidden="true">🍽️</span>
+                        <span>MealRo</span>
+                    </Link>
+
+                    {/* Desktop Navigation */}
+                    <nav className="hidden lg:flex items-center gap-6">
+                        <Link href="/" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">홈</Link>
+                        <Link href="/insights" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">분석</Link>
+                        <Link href="/feed" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">피드</Link>
+                        <Link href="/mypage" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">마이페이지</Link>
+                    </nav>
+                </div>
 
                 <div className="flex items-center gap-3">
                     {!isLoading && (

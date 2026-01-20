@@ -38,7 +38,7 @@ export default function RootLayout({
                 <AuthProvider>
                     <SnackbarProvider>
                         <OnboardingProvider>
-                            <div className="min-h-screen flex flex-col pb-16 md:pb-0">
+                            <div className="min-h-screen flex flex-col pb-16 lg:pb-0">
                                 <Header />
 
                                 {/* Main content */}
@@ -48,7 +48,7 @@ export default function RootLayout({
 
                                 {/* Footer */}
                                 <footer className="bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 mb-safe">
-                                    <div className="max-w-2xl mx-auto px-4 py-6">
+                                    <div className="max-w-2xl lg:max-w-7xl mx-auto px-4 py-6">
                                         <nav className="flex flex-wrap gap-4 text-sm text-slate-500 dark:text-slate-400 mb-4">
                                             <a href="/about" className="hover:text-primary-600">소개</a>
                                             <a href="/disclaimer" className="hover:text-primary-600">면책조항</a>
