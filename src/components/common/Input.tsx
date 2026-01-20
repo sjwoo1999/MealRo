@@ -49,7 +49,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
                         onChange={(e) => onChange(e.target.value)}
                         disabled={disabled}
                         className={`
-                            block w-full rounded-lg px-3 py-2
+                            block w-full rounded-lg px-3 py-2 lg:px-4 lg:py-2.5
                             bg-white dark:bg-slate-800
                             border transition-colors
                             placeholder:text-slate-400 dark:placeholder:text-slate-500
