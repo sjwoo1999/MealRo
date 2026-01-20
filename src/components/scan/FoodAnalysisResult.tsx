@@ -48,40 +48,41 @@ export default function FoodAnalysisResult({ imageSrc, data, onSave, onRetake }:
     // We distribute them evenly for demo purposes
     // Mock Bounding Boxes (Since API v1 doesn't return coordinates yet)
     // We try to distribute them in a way that likely matches a "Set Menu" (Tteokbokki/Fried/Sundae)
+    // Mock Bounding Boxes (Since API v1 doesn't return coordinates yet)
+    // We try to distribute them in a way that likely matches a "Set Menu" (Tteokbokki/Fried/Sundae)
     const boxes = useMemo(() => {
-        // If we have exactly 3 items, assume it's the demo set
-        if (foods.length === 3) {
-            return [
-                {
-                    id: foods[0].id || 'food-0',
-                    label: foods[0].food_name, // e.g. 떡볶이
-                    // Bottom-Left area
-                    x: 0.05, y: 0.5, width: 0.45, height: 0.45
-                },
-                {
-                    id: foods[1].id || 'food-1',
-                    label: foods[1].food_name, // e.g. 모둠 튀김
-                    // Top-Left area
-                    x: 0.05, y: 0.05, width: 0.45, height: 0.4
-                },
-                {
-                    id: foods[2].id || 'food-2',
-                    label: foods[2].food_name, // e.g. 순대
-                    // Right area (tall)
-                    x: 0.55, y: 0.05, width: 0.4, height: 0.9
-                }
-            ];
-        }
+        // Feature-based positioning for the demo set
+        // We look for keywords to assign specific positions
+        return foods.map((food, index) => {
+            const name = food.food_name;
+            let coords = { x: 0, y: 0, width: 0, height: 0 };
 
-        // Fallback for other counts: Grid distribution
-        return foods.map((food, index) => ({
-            id: food.id || `food-${index}`,
-            label: food.food_name,
-            x: foods.length === 1 ? 0.25 : ((index % 2) * 0.5) + 0.05,
-            y: foods.length === 1 ? 0.25 : (Math.floor(index / 2) * 0.45) + 0.05,
-            width: foods.length === 1 ? 0.5 : 0.4,
-            height: foods.length === 1 ? 0.5 : 0.4,
-        }));
+            if (name.includes('떡볶이')) {
+                // Bottom-Left area
+                coords = { x: 0.05, y: 0.5, width: 0.45, height: 0.45 };
+            } else if (name.includes('튀김')) {
+                // Top-Left area
+                // Fried food is usually long/tall or piled up
+                coords = { x: 0.05, y: 0.05, width: 0.45, height: 0.4 };
+            } else if (name.includes('순대')) {
+                // Right area
+                coords = { x: 0.55, y: 0.05, width: 0.4, height: 0.9 };
+            } else {
+                // Fallback grid distribution for unknown items
+                coords = {
+                    x: foods.length === 1 ? 0.25 : ((index % 2) * 0.5) + 0.05,
+                    y: foods.length === 1 ? 0.25 : (Math.floor(index / 2) * 0.45) + 0.05,
+                    width: foods.length === 1 ? 0.5 : 0.4,
+                    height: foods.length === 1 ? 0.5 : 0.4,
+                };
+            }
+
+            return {
+                id: food.id || `food-${index}`,
+                label: food.food_name,
+                ...coords
+            };
+        });
     }, [foods]);
 
     const handleEditSave = (updatedItem: any) => {
