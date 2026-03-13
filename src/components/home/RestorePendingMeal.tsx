@@ -4,6 +4,15 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import SimpleSnackbar from '@/components/SimpleSnackbar';
 import { useAuth } from '@/contexts/AuthContext';
+import Button from '@/components/common/Button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 
 export default function RestorePendingMeal() {
     const [isVisible, setIsVisible] = useState(false);
@@ -79,35 +88,30 @@ export default function RestorePendingMeal() {
 
     return (
         <>
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-                <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-in zoom-in-95">
-                    <div className="text-center mb-6">
-                        <div className="text-4xl mb-3">🥘</div>
-                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                            작성 중인 기록이 있어요
-                        </h3>
-                        <p className="text-slate-600 dark:text-slate-300 mt-2">
-                            로그인 전에 분석했던 음식 기록을<br />
-                            저장하시겠습니까?
-                        </p>
-                    </div>
+            <Dialog open={isVisible} onOpenChange={setIsVisible}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>임시 기록 복구</DialogTitle>
+                        <DialogDescription>
+                            로그인 전에 분석했던 음식 기록을 저장하시겠습니까?
+                        </DialogDescription>
+                    </DialogHeader>
 
-                    <div className="space-y-3">
-                        <button
-                            onClick={handleRestore}
-                            className="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl transition-colors"
-                        >
-                            네, 저장할게요
-                        </button>
-                        <button
+                    <DialogFooter>
+                        <Button fullWidth onClick={handleRestore} className="border border-black bg-black text-white shadow-none">
+                            저장하고 이어가기
+                        </Button>
+                        <Button
+                            variant="outline"
+                            fullWidth
                             onClick={handleDiscard}
-                            className="w-full py-3 text-slate-500 hover:text-slate-700 font-medium"
+                            className="border-black bg-white shadow-none"
                         >
-                            아니요, 삭제할게요
-                        </button>
-                    </div>
-                </div>
-            </div>
+                            삭제하기
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
             <SimpleSnackbar isVisible={!!message} message={message || ''} onClose={() => setMessage(null)} />
         </>
     );

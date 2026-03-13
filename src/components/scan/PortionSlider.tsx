@@ -6,22 +6,20 @@ interface PortionSliderProps {
 }
 
 export default function PortionSlider({ value, onChange }: PortionSliderProps) {
-    // Safe preset points
-    const presets = [0.5, 1.0, 1.5]; // 0.5인분, 1인분, 1.5인분
+    const presets = [50, 100, 150];
 
     return (
         <div className="w-full space-y-4">
-            <div className="flex justify-between items-center px-1">
-                <label className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                    섭취량 조절
+            <div className="flex items-center justify-between px-1">
+                <label className="text-sm font-bold text-slate-700">
+                    섭취량
                 </label>
-                <span className="text-emerald-500 font-bold text-lg">
-                    {value}% <span className="text-xs text-slate-400 font-normal">({value / 100}인분)</span>
+                <span className="text-base font-semibold text-slate-900">
+                    {value}% ({value / 100}인분)
                 </span>
             </div>
 
-            <div className="relative h-6 flex items-center">
-                {/* Custom Track */}
+            <div className="relative flex h-6 items-center">
                 <input
                     type="range"
                     min="0"
@@ -29,28 +27,28 @@ export default function PortionSlider({ value, onChange }: PortionSliderProps) {
                     step="10"
                     value={value}
                     onChange={(e) => onChange(parseInt(e.target.value))}
-                    className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer accent-emerald-500"
+                    className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-black"
                 />
-                {/* Helper Ticks */}
-                <div className="absolute top-1/2 left-0 w-full -translate-y-1/2 pointer-events-none flex justify-between px-1">
-                    <div className="w-0.5 h-1 bg-white/50" />
-                    <div className="w-0.5 h-1 bg-white/50" />
-                    <div className="w-0.5 h-1 bg-white/50" />
+                <div className="pointer-events-none absolute left-0 top-1/2 flex w-full -translate-y-1/2 justify-between px-1">
+                    <div className="h-1 w-0.5 bg-slate-400" />
+                    <div className="h-1 w-0.5 bg-slate-400" />
+                    <div className="h-1 w-0.5 bg-slate-400" />
                 </div>
             </div>
 
-            {/* Preset Buttons */}
             <div className="flex gap-2">
                 {presets.map((preset) => (
                     <button
                         key={preset}
-                        onClick={() => onChange(preset * 100)}
-                        className={`flex-1 py-2 text-xs font-medium rounded-lg border transition-colors ${value === preset * 100
-                                ? 'border-emerald-500 bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
-                                : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-500'
-                            }`}
+                        type="button"
+                        onClick={() => onChange(preset)}
+                        className={`flex-1 rounded-[14px] border py-2 text-xs font-medium transition-colors ${
+                            value === preset
+                                ? 'border-black bg-black text-white'
+                                : 'border-black bg-white text-slate-700'
+                        }`}
                     >
-                        {preset}인분
+                        {preset / 100}인분
                     </button>
                 ))}
             </div>

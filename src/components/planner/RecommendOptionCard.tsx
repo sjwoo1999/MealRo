@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { ReversePlanResult, DietType } from '@/types/planner';
-import { Card, Button } from '@/components/common';
+import { CheckCircle2 } from 'lucide-react';
+import { ReversePlanResult } from '@/types/planner';
 
 interface RecommendOptionCardProps {
     plan: ReversePlanResult;
@@ -10,69 +10,98 @@ interface RecommendOptionCardProps {
     isSelected?: boolean;
 }
 
-const RecommendOptionCard = ({ plan, onSelect, isSelected }: RecommendOptionCardProps) => {
-    // Diet specific styles
-    const styles: Record<DietType, { bg: string, border: string, text: string }> = {
-        balanced: { bg: 'bg-green-50 dark:bg-green-900/20', border: 'border-green-500', text: 'text-green-700 dark:text-green-300' },
-        lowCarb: { bg: 'bg-blue-50 dark:bg-blue-900/20', border: 'border-blue-500', text: 'text-blue-700 dark:text-blue-300' },
-        highProtein: { bg: 'bg-red-50 dark:bg-red-900/20', border: 'border-red-500', text: 'text-red-700 dark:text-red-300' },
-    };
+const DIET_LABEL: Record<string, string> = {
+    balanced: '가장 기본적인 균형안',
+    lowCarb: '탄수 비중을 낮추는 안',
+    highProtein: '단백질을 높이는 안',
+};
 
-    const style = styles[plan.dietType];
+const SLOT_LABELS = {
+    breakfast: '아침',
+    lunch: '점심',
+    dinner: '저녁',
+};
 
+const RecommendOptionCard = ({ plan, onSelect, isSelected = false }: RecommendOptionCardProps) => {
     return (
-        <Card
-            className={`
-                relative mb-4 cursor-pointer transition-all duration-300
-                border-2
-                ${isSelected ? style.border : 'border-transparent hover:border-slate-200'}
-                ${isSelected ? style.bg : 'bg-white dark:bg-slate-800'}
-            `}
+        <button
+            type="button"
             onClick={onSelect}
+            className={`w-full rounded-[24px] border p-5 text-left transition-colors ${
+                isSelected ? 'border-black bg-black text-white' : 'border-black bg-white text-slate-900'
+            }`}
         >
-            <div className="flex justify-between items-start mb-4">
+            <div className="flex items-start justify-between gap-4">
                 <div>
-                    <h3 className={`text-lg font-bold ${style.text}`}>
-                        {plan.dietLabel}
-                    </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                        Total {plan.dailyTotal.calories}kcal ({plan.accuracy}% 일치)
-                    </p>
-                </div>
-                {isSelected && (
-                    <div className={`p-1 rounded-full ${style.bg} ${style.text}`}>
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
+                    <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-semibold">
+                            {plan.dietLabel}
+                        </h3>
+                        {isSelected && (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-white/20 bg-white/10 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white">
+                                Selected
+                            </span>
+                        )}
                     </div>
-                )}
+                    <p className={`mt-1 text-sm ${isSelected ? 'text-white/70' : 'text-slate-600'}`}>{DIET_LABEL[plan.dietType]}</p>
+                </div>
+                <div className="text-right">
+                    <p className="text-sm font-semibold">{plan.accuracy}% 일치</p>
+                    <p className={`mt-1 text-xs ${isSelected ? 'text-white/70' : 'text-slate-500'}`}>총 {plan.dailyTotal.calories} kcal</p>
+                </div>
             </div>
 
-            {/* Menu List */}
-            <div className="space-y-3">
-                {plan.recommendations.map((rec) => (
-                    <div key={rec.mealSlot} className="flex items-center text-sm">
-                        <span className="w-10 text-xs text-slate-400 uppercase font-bold">
-                            {rec.mealSlot.substr(0, 1)}
-                        </span>
-                        <div className="flex-1 font-medium text-slate-800 dark:text-slate-200">
-                            {rec.menu.name}
-                        </div>
-                        <div className="text-xs text-slate-500">
-                            {rec.menu.calories}kcal
+            <div className="mt-4 space-y-3">
+                {plan.recommendations.map((recommendation) => (
+                    <div
+                        key={recommendation.mealSlot}
+                        className={`rounded-[18px] border p-4 ${isSelected ? 'border-white/20 bg-white/10' : 'border-black bg-slate-50'}`}
+                    >
+                        <div className="flex items-start justify-between gap-3">
+                            <div>
+                                <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isSelected ? 'text-white/70' : 'text-slate-500'}`}>
+                                    {SLOT_LABELS[recommendation.mealSlot]}
+                                </p>
+                                <p className="mt-1 font-medium">{recommendation.menu.name}</p>
+                                <p className={`mt-2 text-xs ${isSelected ? 'text-white/70' : 'text-slate-500'}`}>
+                                    목표 {recommendation.targetCalories} kcal 대비 {recommendation.caloriesDiff > 0 ? '+' : ''}{recommendation.caloriesDiff} kcal
+                                </p>
+                            </div>
+                            <span className="text-sm font-semibold">{recommendation.menu.calories} kcal</span>
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* Macro Ratio Bar (Mini) */}
-            <div className="mt-4 flex h-1.5 rounded-full overflow-hidden w-full bg-slate-200 dark:bg-slate-700">
-                <div className="bg-red-400 h-full" style={{ width: `${(plan.dailyTotal.protein * 4 / plan.dailyTotal.calories) * 100}%` }}></div>
-                <div className="bg-blue-400 h-full" style={{ width: `${(plan.dailyTotal.carbs * 4 / plan.dailyTotal.calories) * 100}%` }}></div>
-                <div className="bg-amber-400 h-full" style={{ width: `${(plan.dailyTotal.fat * 9 / plan.dailyTotal.calories) * 100}%` }}></div>
+            <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
+                <MiniMetric label="탄수" value={`${plan.dailyTotal.carbs}g`} />
+                <MiniMetric label="단백질" value={`${plan.dailyTotal.protein}g`} />
+                <MiniMetric label="지방" value={`${plan.dailyTotal.fat}g`} />
             </div>
-        </Card>
+
+            {isSelected && (
+                <div className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-white">
+                    <CheckCircle2 className="h-4 w-4" />
+                    이 추천안을 현재 선택 중
+                </div>
+            )}
+        </button>
     );
 };
+
+function MiniMetric({
+    label,
+    value,
+}: {
+    label: string;
+    value: string;
+}) {
+    return (
+        <div className="rounded-[16px] border border-current/10 px-3 py-2">
+            <p className="opacity-70">{label}</p>
+            <p className="mt-1 font-semibold">{value}</p>
+        </div>
+    );
+}
 
 export default RecommendOptionCard;

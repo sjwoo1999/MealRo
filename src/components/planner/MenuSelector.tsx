@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Input, Card } from '@/components/common';
+import { Search } from 'lucide-react';
+import { Input } from '@/components/common';
 import { SelectedMenu, MealSlot } from '@/types/planner';
 
 interface MenuSelectorProps {
@@ -65,34 +66,51 @@ const MenuSelector = ({ onSelect, currentSlot }: MenuSelectorProps) => {
     return (
         <div className="relative animate-fade-in-up">
             <Input
-                label="무엇을 드셨나요?"
+                label="기준 메뉴"
                 value={query}
                 onChange={setQuery}
-                placeholder="음식 이름 검색 (예: 김치찌개)"
+                placeholder="예: 김치찌개"
                 hint={selectedItem ? `선택됨: ${selectedItem.calories}kcal` : undefined}
             />
 
-            {/* Results Dropdown */}
+            {!query.trim() && (
+                <div className="mt-3 rounded-[20px] border border-black bg-slate-50 px-4 py-3">
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                        <Search className="h-4 w-4" />
+                        <span>검색해서 기준 메뉴를 하나 고르세요.</span>
+                    </div>
+                </div>
+            )}
+
             {results.length > 0 && !selectedItem && (
-                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-100 dark:border-slate-700 max-h-60 overflow-y-auto">
+                <div className="absolute z-10 mt-2 max-h-72 w-full overflow-y-auto rounded-[20px] border border-black bg-white">
                     {results.map((item) => (
-                        <div
+                        <button
+                            type="button"
                             key={item.id}
-                            className="p-3 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer border-b border-slate-50 dark:border-slate-700 last:border-none"
+                            className="block w-full border-b border-black/10 p-4 text-left transition-colors hover:bg-slate-50 last:border-none"
                             onClick={() => handleSelect(item)}
                         >
-                            <div className="font-bold text-sm text-slate-800 dark:text-slate-200">{item.name}</div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400">
-                                {item.calories}kcal • 캐:{item.category}
+                            <div className="flex items-start justify-between gap-3">
+                                <div>
+                                    <div className="font-bold text-sm text-slate-800">{item.name}</div>
+                                    <div className="mt-1 text-xs text-slate-500">
+                                        카테고리 {item.category}
+                                    </div>
+                                </div>
+                                <div className="text-right text-xs text-slate-500">
+                                    <div>{item.calories}kcal</div>
+                                    <div className="mt-1">단백질 {item.protein}g</div>
+                                </div>
                             </div>
-                        </div>
+                        </button>
                     ))}
                 </div>
             )}
 
             {isLoading && (
                 <div className="absolute top-[38px] right-3">
-                    <div className="animate-spin h-4 w-4 border-2 border-primary-500 rounded-full border-t-transparent"></div>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent"></div>
                 </div>
             )}
         </div>

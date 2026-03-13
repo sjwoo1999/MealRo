@@ -20,11 +20,13 @@ interface NutritionSummaryProps {
 
 const NutritionSummary = ({ current, target }: NutritionSummaryProps) => {
     return (
-        <Card className="bg-slate-50 dark:bg-slate-800/50 mb-6">
-            <h4 className="text-sm font-bold text-slate-900 dark:text-slate-200 mb-3">
-                예상 영양 섭취
-            </h4>
-            <div className="grid grid-cols-4 gap-2 text-center">
+        <Card padding="lg">
+            <h3 className="text-base font-semibold text-slate-900">목표 대비 영양 요약</h3>
+            <p className="mt-1 text-sm leading-6 text-slate-500">
+                선택한 추천안이 하루 목표에 얼마나 근접하는지 먼저 확인합니다.
+            </p>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <SummaryItem label="칼로리" current={current.calories} target={target.calories} unit="kcal" />
                 <SummaryItem label="탄수화물" current={current.carbs} target={target.carbs} unit="g" />
                 <SummaryItem label="단백질" current={current.protein} target={target.protein} unit="g" />
@@ -34,20 +36,48 @@ const NutritionSummary = ({ current, target }: NutritionSummaryProps) => {
     );
 };
 
-const SummaryItem = ({ label, current, target, unit }: { label: string, current: number, target: number, unit: string }) => {
+function SummaryItem({
+    label,
+    current,
+    target,
+    unit,
+}: {
+    label: string;
+    current: number;
+    target: number;
+    unit: string;
+}) {
     const percent = Math.round((current / target) * 100);
-    const isOver = percent > 110;
-    const isUnder = percent < 90;
+    const tone = percent > 110 ? '#111111' : percent < 90 ? '#6b7280' : '#111111';
+    const status = percent > 110 ? '초과' : percent < 90 ? '부족' : '적정';
 
     return (
-        <div>
-            <div className="text-xs text-slate-500 mb-1">{label}</div>
-            <div className={`font-bold text-sm ${isOver ? 'text-red-500' : isUnder ? 'text-amber-500' : 'text-green-500'}`}>
-                {current}
+        <div className="rounded-[22px] border border-black bg-slate-50 p-4">
+            <div className="flex items-start justify-between gap-3">
+                <div>
+                    <p className="text-sm text-slate-500">{label}</p>
+                    <p className="mt-2 text-lg font-semibold text-slate-900">
+                        {current}
+                        <span className="ml-1 text-sm font-medium text-slate-500">{unit}</span>
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">목표 {target}{unit}</p>
+                </div>
+                <span className="rounded-full border border-black px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: tone }}>
+                    {status}
+                </span>
             </div>
-            <div className="text-[10px] text-slate-400">/ {target}{unit}</div>
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200">
+                <div
+                    className="h-full rounded-full"
+                    style={{
+                        width: `${Math.min(percent, 100)}%`,
+                        backgroundColor: tone,
+                    }}
+                />
+            </div>
+            <p className="mt-2 text-xs text-slate-500">달성률 {percent}%</p>
         </div>
     );
-};
+}
 
 export default NutritionSummary;

@@ -1,74 +1,78 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { CheckCircle2, Edit2, RotateCcw } from 'lucide-react';
 import { FoodData, hasMultipleFoods } from '@/types/food';
 import BoundingBoxOverlay from './BoundingBoxOverlay';
 import FoodEditBottomSheet from './FoodEditBottomSheet';
-import { Edit2 } from 'lucide-react';
+import { Button, Card } from '@/components/common';
 
 interface FoodAnalysisResultProps {
     imageSrc: string;
     data: FoodData | { foods: FoodData[] };
     onSave: (data: FoodData | { foods: FoodData[] }) => void;
     onRetake: () => void;
+    mealLabel?: string;
 }
 
-// Extended type for local state with visual properties
 interface VisualFoodData extends FoodData {
     id: string;
-    portion: number; // Percentage (default 100)
+    portion: number;
 }
 
-// Helper to normalized single/multi structure
 const normalizeFoods = (data: FoodData | { foods: FoodData[] }): VisualFoodData[] => {
     if (hasMultipleFoods(data)) {
-        return data.foods.map((f, i) => ({
-            ...f,
-            id: `food-${i}`,
-            portion: 100
+        return data.foods.map((food, index) => ({
+            ...food,
+            id: `food-${index}`,
+            portion: 100,
         }));
     }
-    return [{
-        ...data,
-        id: 'food-0',
-        portion: 100
-    }];
+
+    return [
+        {
+            ...data,
+            id: 'food-0',
+            portion: 100,
+        },
+    ];
 };
 
-export default function FoodAnalysisResult({ imageSrc, data, onSave, onRetake }: FoodAnalysisResultProps) {
-    // Local state for optimistic updates
+export default function FoodAnalysisResult({
+    imageSrc,
+    data,
+    onSave,
+    onRetake,
+    mealLabel,
+}: FoodAnalysisResultProps) {
     const [foods, setFoods] = useState<VisualFoodData[]>(() => normalizeFoods(data));
     const [selectedFoodId, setSelectedFoodId] = useState<string | null>(null);
     const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number } | undefined>(undefined);
 
-    // Totals
-    const totalCalories = foods.reduce((sum, f) => sum + Math.round(f.nutrition.calories), 0);
+    const totals = foods.reduce((acc, food) => ({
+        calories: acc.calories + Math.round(food.nutrition.calories),
+        carbohydrates: acc.carbohydrates + food.nutrition.carbohydrates,
+        protein: acc.protein + food.nutrition.protein,
+        fat: acc.fat + food.nutrition.fat,
+    }), {
+        calories: 0,
+        carbohydrates: 0,
+        protein: 0,
+        fat: 0,
+    });
 
-    // Mock Bounding Boxes (Since API v1 doesn't return coordinates yet)
-    // We distribute them evenly for demo purposes
-    // Mock Bounding Boxes (Since API v1 doesn't return coordinates yet)
-    // We try to distribute them in a way that likely matches a "Set Menu" (Tteokbokki/Fried/Sundae)
-    // Mock Bounding Boxes (Since API v1 doesn't return coordinates yet)
-    // We try to distribute them in a way that likely matches a "Set Menu" (Tteokbokki/Fried/Sundae)
     const boxes = useMemo(() => {
-        // Feature-based positioning for the demo set
-        // We look for keywords to assign specific positions
         return foods.map((food, index) => {
             const name = food.food_name;
             let coords = { x: 0, y: 0, width: 0, height: 0 };
 
             if (name.includes('떡볶이')) {
-                // Bottom-Left area
                 coords = { x: 0.05, y: 0.5, width: 0.45, height: 0.45 };
             } else if (name.includes('튀김')) {
-                // Top-Left area
-                // Fried food is usually long/tall or piled up
                 coords = { x: 0.05, y: 0.05, width: 0.45, height: 0.4 };
             } else if (name.includes('순대')) {
-                // Right area
                 coords = { x: 0.55, y: 0.05, width: 0.4, height: 0.9 };
             } else {
-                // Fallback grid distribution for unknown items
                 coords = {
                     x: foods.length === 1 ? 0.25 : ((index % 2) * 0.5) + 0.05,
                     y: foods.length === 1 ? 0.25 : (Math.floor(index / 2) * 0.45) + 0.05,
@@ -78,152 +82,209 @@ export default function FoodAnalysisResult({ imageSrc, data, onSave, onRetake }:
             }
 
             return {
-                id: food.id || `food-${index}`,
+                id: food.id,
                 label: food.food_name,
-                ...coords
+                ...coords,
             };
         });
     }, [foods]);
 
-    const handleEditSave = (updatedItem: any) => {
-        setFoods(prev => prev.map(f => {
-            if (f.id === updatedItem.id) {
-                // Recalculate nutrition based on portion ratio change
-                // Logic: newCalories = (baseCalories / oldPortion) * newPortion
-                // But simplify: We store 'portion' as metadata. 
-                // In real app, we might need base 100g values. 
-                // Here, we just scale the CURRENT values if we tracked base values, 
-                // OR we assume the input `calories` is the 100% value.
-                // Let's assume the editing sheet returns the SCALED values or we calculate here.
-
-                // For MVP: The BottomSheet updates the 'portion' field.
-                // We should ideally revert to base if portion changes.
-                // Let's just update the name and assume portion scaling logic is visual for now or simplistic.
-
-                const ratio = updatedItem.portion / 100;
-                // Note: In a real app, you'd store unit_nutrition and multiply. 
-                // For this UI demo, we will update the displayed calories directly.
-
-                return {
-                    ...f,
-                    food_name: updatedItem.name,
-                    nutrition: {
-                        ...f.nutrition,
-                        // Simple hack: if portion changed, we'd need base values. 
-                        // Let's just update calories for display
-                        calories: Math.round(f.nutrition.calories * (updatedItem.portion / (f.portion || 100) || 1))
-                    },
-                    portion: updatedItem.portion
-                };
+    const handleEditSave = (updatedItem: { id: string; name: string; calories: number; portion: number }) => {
+        setFoods((prev) => prev.map((food) => {
+            if (food.id !== updatedItem.id) {
+                return food;
             }
-            return f;
+
+            const currentPortion = food.portion || 100;
+            const nextPortion = updatedItem.portion || 100;
+            const portionRatio = currentPortion === 0 ? 1 : nextPortion / currentPortion;
+
+            return {
+                ...food,
+                food_name: updatedItem.name,
+                nutrition: {
+                    ...food.nutrition,
+                    calories: Math.round(food.nutrition.calories * portionRatio),
+                    carbohydrates: Math.round(food.nutrition.carbohydrates * portionRatio * 10) / 10,
+                    protein: Math.round(food.nutrition.protein * portionRatio * 10) / 10,
+                    fat: Math.round(food.nutrition.fat * portionRatio * 10) / 10,
+                    sodium: Math.round(food.nutrition.sodium * portionRatio),
+                    fiber: Math.round(food.nutrition.fiber * portionRatio * 10) / 10,
+                },
+                portion: nextPortion,
+            };
         }));
         setSelectedFoodId(null);
     };
 
     const handleConfirm = () => {
-        // Reconstruct original format
         const finalData = foods.length === 1 ? foods[0] : { foods };
         onSave(finalData);
     };
 
-    const selectedFood = foods.find(f => f.id === selectedFoodId);
+    const selectedFood = foods.find((food) => food.id === selectedFoodId);
 
     return (
-        <div className="flex flex-col h-full bg-white dark:bg-slate-900 pb-20">
+        <>
+            <div className="space-y-4">
+                <Card padding="lg" className="border border-black shadow-none">
+                    <h3 className="text-xl font-semibold text-slate-900">
+                        {mealLabel ? `${mealLabel} 결과` : '분석 결과'}
+                    </h3>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <span className="rounded-full border border-black bg-slate-50 px-3 py-1.5 text-sm font-semibold text-slate-900">
+                            {totals.calories.toLocaleString()} kcal
+                        </span>
+                        <span className="rounded-full border border-black bg-white px-3 py-1.5 text-sm font-medium text-slate-700">
+                            {foods.length}개 인식
+                        </span>
+                        <span className="rounded-full border border-black bg-white px-3 py-1.5 text-sm font-medium text-slate-700">
+                            저장 전
+                        </span>
+                    </div>
+                </Card>
 
-            {/* 1. Visual Analysis View */}
-            <div className="relative w-full aspect-square bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                    src={imageSrc}
-                    alt="Analysis"
-                    className="w-full h-full object-contain"
-                    onLoad={(e) => {
-                        const img = e.currentTarget;
-                        setImageDimensions({
-                            width: img.naturalWidth,
-                            height: img.naturalHeight
-                        });
-                    }}
-                />
+                <Card padding="none" className="overflow-hidden border border-black shadow-none">
+                    <div className="relative aspect-[4/3] overflow-hidden bg-[#f3f3f3]">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                            src={imageSrc}
+                            alt="Analysis"
+                            className="h-full w-full object-contain"
+                            onLoad={(event) => {
+                                const image = event.currentTarget;
+                                setImageDimensions({
+                                    width: image.naturalWidth,
+                                    height: image.naturalHeight,
+                                });
+                            }}
+                        />
 
-                {/* Bounding Boxes */}
-                <BoundingBoxOverlay
-                    boxes={boxes}
-                    onBoxClick={setSelectedFoodId}
-                    imageDimensions={imageDimensions}
-                    objectFit="contain"
-                />
+                        <BoundingBoxOverlay
+                            boxes={boxes}
+                            onBoxClick={setSelectedFoodId}
+                            imageDimensions={imageDimensions}
+                            objectFit="contain"
+                        />
 
-                {/* Total Overlay */}
-                <div className="absolute top-4 right-4 bg-black/60 text-white px-3 py-1.5 rounded-full backdrop-blur-md text-sm font-bold">
-                    Total {totalCalories.toLocaleString()} kcal
-                </div>
-            </div>
-
-            {/* 2. List Summary (Tap items to edit as well) */}
-            <div className="flex-1 p-5 space-y-4 overflow-y-auto">
-                <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-lg">분석 결과 ({foods.length})</h3>
-                    <button onClick={onRetake} className="text-sm text-slate-500 hover:text-slate-800">
-                        다시 찍기
-                    </button>
-                </div>
-
-                <div className="space-y-3">
-                    {foods.map((food) => (
-                        <div
-                            key={food.id}
-                            onClick={() => setSelectedFoodId(food.id!)}
-                            className="flex justify-between items-center p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-800 active:scale-[0.98] transition-transform cursor-pointer"
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">
-                                    {Math.round(food.nutrition.calories)}
-                                </div>
-                                <div>
-                                    <p className="font-bold">{food.food_name}</p>
-                                    <p className="text-xs text-slate-500">
-                                        탄 {food.nutrition.carbohydrates} · 단 {food.nutrition.protein} · 지 {food.nutrition.fat}
-                                    </p>
-                                </div>
-                            </div>
-                            <Edit2 className="w-4 h-4 text-slate-300" />
+                        <div className="absolute left-4 top-4 rounded-full border border-black bg-white px-3 py-1.5 text-xs font-semibold text-slate-900">
+                            눌러서 수정
                         </div>
-                    ))}
+                    </div>
+                </Card>
+
+                <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.95fr)]">
+                    <Card padding="lg" className="border border-black shadow-none">
+                        <div className="flex items-center justify-between gap-3">
+                            <div>
+                                <h4 className="text-base font-semibold text-slate-900">인식된 음식</h4>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={onRetake}
+                                className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-800"
+                            >
+                                다시 촬영
+                            </button>
+                        </div>
+
+                        <div className="mt-4 space-y-3">
+                            {foods.map((food) => (
+                                <button
+                                    key={food.id}
+                                    type="button"
+                                    onClick={() => setSelectedFoodId(food.id)}
+                                    className="flex w-full items-start justify-between gap-3 rounded-[20px] border border-black bg-[#f7f7f7] p-4 text-left"
+                                >
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-semibold text-slate-900">{food.food_name}</p>
+                                            <span className="text-sm font-semibold text-slate-700">
+                                                {Math.round(food.nutrition.calories)} kcal
+                                            </span>
+                                        </div>
+                                        <p className="mt-1 text-sm text-slate-600">
+                                            {food.serving_size} · 탄수 {Math.round(food.nutrition.carbohydrates)}g · 단백질 {Math.round(food.nutrition.protein)}g · 지방 {Math.round(food.nutrition.fat)}g
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                                        <Edit2 className="h-4 w-4 text-slate-400" />
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </Card>
+
+                    <div className="space-y-4">
+                        <Card padding="lg" className="border border-black shadow-none">
+                            <h4 className="text-base font-semibold text-slate-900">영양 요약</h4>
+                            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                                <MetricCard label="탄수화물" value={`${Math.round(totals.carbohydrates)} g`} compact />
+                                <MetricCard label="단백질" value={`${Math.round(totals.protein)} g`} compact />
+                                <MetricCard label="지방" value={`${Math.round(totals.fat)} g`} compact />
+                                <MetricCard label="기록 상태" value="준비 완료" compact />
+                            </div>
+                        </Card>
+                    </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                    <Button
+                        variant="outline"
+                        size="lg"
+                        leftIcon={<RotateCcw className="h-4 w-4" />}
+                        onClick={onRetake}
+                        className="border-black bg-white shadow-none"
+                    >
+                        사진 다시 선택
+                    </Button>
+                    <Button
+                        size="lg"
+                        leftIcon={<CheckCircle2 className="h-4 w-4" />}
+                        onClick={handleConfirm}
+                        className="border border-black bg-black text-white shadow-none"
+                    >
+                        기록하기
+                    </Button>
                 </div>
             </div>
 
-            {/* 3. Bottom Fixed Action */}
-            <div className="fixed bottom-0 left-0 right-0 p-5 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 max-w-md mx-auto">
-                <button
-                    onClick={handleConfirm}
-                    className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl shadow-lg shadow-emerald-500/30 text-lg"
-                >
-                    이대로 기록하기
-                </button>
-            </div>
-
-            {/* 4. Edit Sheet */}
             <FoodEditBottomSheet
                 isOpen={!!selectedFood}
                 item={selectedFood ? {
-                    id: selectedFood.id!,
+                    id: selectedFood.id,
                     name: selectedFood.food_name,
                     calories: selectedFood.nutrition.calories,
-                    portion: (selectedFood as any).portion || 100
+                    portion: selectedFood.portion || 100,
                 } : undefined}
                 onClose={() => setSelectedFoodId(null)}
                 onSave={handleEditSave}
                 onDelete={(id) => {
                     if (foods.length > 1) {
-                        setFoods(prev => prev.filter(f => f.id !== id));
-                    } else {
-                        alert("최소 1개의 음식은 있어야 합니다.");
+                        setFoods((prev) => prev.filter((food) => food.id !== id));
+                        return;
                     }
+
+                    alert('최소 1개의 음식은 있어야 합니다.');
                 }}
             />
+        </>
+    );
+}
+
+function MetricCard({
+    label,
+    value,
+    compact = false,
+}: {
+    label: string;
+    value: string;
+    compact?: boolean;
+}) {
+    return (
+        <div className={compact ? 'rounded-[18px] border border-black bg-[#f7f7f7] p-4' : 'rounded-[20px] border border-black bg-[#f7f7f7] p-4'}>
+            <p className="text-sm text-slate-500">{label}</p>
+            <p className="mt-2 text-lg font-semibold text-slate-900">{value}</p>
         </div>
     );
 }

@@ -1,102 +1,237 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useGeolocation } from '@/hooks/useGeolocation';
+import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { Crosshair, MapPin, RefreshCcw } from 'lucide-react';
+import { Button, Card, PageShell } from '@/components/common';
 import Map from '@/components/map/Map';
 import RestaurantCard from '@/components/map/RestaurantCard';
-import { Button } from '@/components/common';
+import { FALLBACK_CENTER, FALLBACK_RESTAURANTS, type RestaurantSummary, normalizeRestaurant } from '@/lib/restaurants';
 
 export default function NearbyPage() {
-    const { latitude, longitude, error: geoError, isLoading: geoLoading } = useGeolocation();
-    const [restaurants, setRestaurants] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const [restaurants, setRestaurants] = useState<RestaurantSummary[]>(FALLBACK_RESTAURANTS);
+    const [selectedId, setSelectedId] = useState<string>(FALLBACK_RESTAURANTS[0].id);
+    const [center, setCenter] = useState(FALLBACK_CENTER);
+    const [status, setStatus] = useState<'idle' | 'locating' | 'loaded' | 'fallback'>('idle');
 
     useEffect(() => {
-        // Mock if no DB data
-        const MOCK_DATA = [
-            { id: '1', name: '건강한 밥상', category: '한식', latitude: 37.5665, longitude: 126.9780, address: '서울 중구', rating: 4.5, review_count: 120 },
-            { id: '2', name: '샐러드 팜', category: '양식', latitude: 37.5660, longitude: 126.9784, address: '서울 중구', rating: 4.8, review_count: 50 },
-        ];
-
-        const fetchRestaurants = async () => {
-            if (!latitude || !longitude) return;
-            setIsLoading(true);
-            try {
-                const res = await fetch(`/api/restaurants/nearby?lat=${latitude}&lng=${longitude}&range=1`);
-                const data = await res.json();
-                if (data.success && data.data.length > 0) {
-                    setRestaurants(data.data);
-                } else {
-                    // Fallback to mock if empty (during dev)
-                    // In real app, just empty state
-                    // Use a mock slightly offset from user
-                    setRestaurants(MOCK_DATA.map(r => ({
-                        ...r,
-                        latitude: latitude + (Math.random() - 0.5) * 0.002,
-                        longitude: longitude + (Math.random() - 0.5) * 0.002
-                    })));
-                }
-            } catch (e) {
-                console.error(e);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        if (latitude && longitude) {
-            fetchRestaurants();
+        if (!navigator.geolocation) {
+            setStatus('fallback');
+            return;
         }
-    }, [latitude, longitude]);
 
-    if (geoLoading) {
-        return <div className="p-8 text-center text-slate-500">위치 정보를 불러오는 중...</div>;
-    }
+        setStatus('locating');
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const nextCenter = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                };
 
-    if (geoError && !latitude) {
-        return (
-            <div className="p-8 text-center">
-                <p className="text-red-500 mb-4">{geoError}</p>
-                <p className="text-sm text-slate-500">위치 권한을 허용해주세요.</p>
-            </div>
+                setCenter(nextCenter);
+
+                try {
+                    const response = await fetch(`/api/restaurants/nearby?lat=${nextCenter.lat}&lng=${nextCenter.lng}&range=1`);
+                    const payload = await response.json();
+
+                    if (payload.success && Array.isArray(payload.data) && payload.data.length > 0) {
+                        const normalized: RestaurantSummary[] = payload.data.map((item: any, index: number) =>
+                            normalizeRestaurant(item, index)
+                        );
+
+                        setRestaurants(normalized);
+                        setSelectedId(normalized[0].id);
+                        setStatus('loaded');
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Failed to load nearby restaurants', error);
+                }
+
+                setStatus('fallback');
+            },
+            () => {
+                setStatus('fallback');
+            },
+            { enableHighAccuracy: true, timeout: 7000 }
         );
-    }
+    }, []);
 
-    const center = { lat: latitude || 37.5665, lng: longitude || 126.9780 };
-    const markers = restaurants.map(r => ({
-        id: r.id,
-        lat: r.latitude,
-        lng: r.longitude,
-        title: r.name
-    }));
+    const selectedRestaurant = restaurants.find((restaurant) => restaurant.id === selectedId) || restaurants[0];
+
+    const markers = useMemo(
+        () =>
+            restaurants
+                .filter((restaurant) => restaurant.latitude && restaurant.longitude)
+                .map((restaurant) => ({
+                    id: restaurant.id,
+                    lat: restaurant.latitude as number,
+                    lng: restaurant.longitude as number,
+                    title: restaurant.name,
+                })),
+        [restaurants]
+    );
 
     return (
-        <div className="max-w-2xl mx-auto px-4 py-6 pb-20">
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">
-                주변 맛집 찾기 📍
-            </h1>
+        <PageShell
+            title="주변 탐색"
+            description="기록 후 바로 갈 수 있는 식당을 확인하는 단계입니다."
+            width="wide"
+        >
+            <div className="space-y-5">
+                <Card padding="lg">
+                    <div className="flex flex-wrap items-end justify-between gap-3">
+                        <div>
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">Explore</p>
+                            <h2 className="mt-2 text-2xl font-semibold text-copy">지금 바로 갈 수 있는 식당</h2>
+                            <p className="mt-2 text-sm leading-6 text-copy-subtle">
+                                추천 이후 바로 탐색하는 MVP 흐름입니다.
+                            </p>
+                        </div>
+                        <span className="rounded-full border border-line px-3 py-1 text-xs font-semibold text-copy-muted">
+                            {restaurants.length} places
+                        </span>
+                    </div>
 
-            <div className="mb-6 relative z-0">
-                <Map
-                    center={center}
-                    markers={markers}
-                    className="shadow-lg"
-                    level={4}
-                />
+                    <div className="mt-5 flex flex-wrap gap-2 text-xs">
+                        <StatusPill active={status === 'loaded'}>현재 위치 반영</StatusPill>
+                        <StatusPill active={status === 'fallback'}>샘플 데이터</StatusPill>
+                        <StatusPill active={status === 'locating'}>위치 확인 중</StatusPill>
+                    </div>
+                </Card>
+
+                <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+                    <div className="space-y-5">
+                        <Card padding="lg">
+                            <div className="flex items-center justify-between gap-3">
+                                <div>
+                                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">Map</p>
+                                    <p className="mt-2 text-sm text-copy-muted">지도에서 위치를 확인하고 식당을 선택하세요.</p>
+                                </div>
+                                <div className="rounded-full border border-line-strong px-3 py-1 text-xs text-copy-muted">
+                                    1km
+                                </div>
+                            </div>
+
+                            <div className="mt-5 overflow-hidden rounded-2xl border border-line shadow-sm">
+                                <Map
+                                    center={center}
+                                    markers={markers}
+                                    onMarkerClick={setSelectedId}
+                                />
+                            </div>
+                        </Card>
+
+                        <Card padding="lg">
+                            <div className="flex items-center justify-between gap-3">
+                                <div>
+                                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">List</p>
+                                    <h3 className="mt-2 text-xl font-semibold text-copy">주변 후보</h3>
+                                </div>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    leftIcon={<RefreshCcw className="h-4 w-4" />}
+                                    onClick={() => window.location.reload()}
+                                >
+                                    새로고침
+                                </Button>
+                            </div>
+
+                            <div className="mt-5 space-y-3">
+                                {restaurants.map((restaurant) => (
+                                    <RestaurantCard
+                                        key={restaurant.id}
+                                        restaurant={restaurant}
+                                        selected={restaurant.id === selectedId}
+                                        onClick={() => setSelectedId(restaurant.id)}
+                                    />
+                                ))}
+                            </div>
+                        </Card>
+                    </div>
+
+                    <div className="space-y-5">
+                        <Card padding="lg">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">Selected Place</p>
+                            <h3 className="mt-2 text-xl font-semibold text-copy">{selectedRestaurant?.name || '식당을 선택하세요'}</h3>
+                            <div className="mt-4 space-y-3 text-sm text-copy-muted">
+                                <div className="flex items-start gap-2">
+                                    <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
+                                    <span>{selectedRestaurant?.address || '주소 정보 없음'}</span>
+                                </div>
+                                <div className="flex items-start gap-2">
+                                    <Crosshair className="mt-0.5 h-4 w-4 shrink-0" />
+                                    <span>
+                                        {selectedRestaurant?.distance !== undefined
+                                            ? `${selectedRestaurant.distance.toFixed(1)}km 거리`
+                                            : '거리 정보 없음'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                                <InfoBox label="카테고리" value={selectedRestaurant?.category || '음식점'} />
+                                <InfoBox
+                                    label="평점"
+                                    value={
+                                        selectedRestaurant?.rating
+                                            ? `${selectedRestaurant.rating} / 5`
+                                            : '정보 없음'
+                                    }
+                                />
+                            </div>
+                        </Card>
+
+                        <Card padding="lg">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">Next Action</p>
+                            <div className="mt-4 space-y-3">
+                                <Link href={`/nearby/${selectedRestaurant.id}`} className="block">
+                                    <Button fullWidth>
+                                        상세 보기
+                                    </Button>
+                                </Link>
+                                <Button
+                                    variant="outline"
+                                    fullWidth
+                                    onClick={() => window.location.href = '/feed'}
+                                >
+                                    베타 피드로 돌아가기
+                                </Button>
+                            </div>
+                        </Card>
+                    </div>
+                </div>
             </div>
+        </PageShell>
+    );
+}
 
-            <div className="space-y-4">
-                <h2 className="font-bold text-lg text-slate-800 dark:text-slate-200">
-                    추천 식당 ({restaurants.length})
-                </h2>
+function StatusPill({
+    children,
+    active = false,
+}: {
+    children: React.ReactNode;
+    active?: boolean;
+}) {
+    return (
+        <span className={`rounded-full border px-3 py-1 transition-colors ${active ? 'border-accent bg-accent text-white shadow-sm' : 'border-line-strong bg-surface text-copy-muted'}`}>
+            {children}
+        </span>
+    );
+}
 
-                {isLoading ? (
-                    <div className="text-center py-4 text-slate-500">목록 불러오는 중...</div>
-                ) : (
-                    restaurants.map(r => (
-                        <RestaurantCard key={r.id} restaurant={r} />
-                    ))
-                )}
-            </div>
+function InfoBox({
+    label,
+    value,
+}: {
+    label: string;
+    value: string;
+}) {
+    return (
+        <div className="rounded-2xl border border-line bg-surface p-4 shadow-sm">
+            <p className="text-sm text-copy-subtle">{label}</p>
+            <p className="mt-2 text-base font-semibold text-copy">{value}</p>
         </div>
     );
 }

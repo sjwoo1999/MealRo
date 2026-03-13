@@ -1,14 +1,23 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { X, Trash2, Check } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Check, Trash2, X } from 'lucide-react';
+import { Button } from '@/components/common';
 import PortionSlider from './PortionSlider';
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetFooter,
+    SheetHeader,
+    SheetTitle,
+} from '@/components/ui/sheet';
 
 interface FoodItem {
     id: string;
     name: string;
     calories: number;
-    portion: number; // percentage (100 = 1 serving)
+    portion: number;
 }
 
 interface FoodEditBottomSheetProps {
@@ -24,7 +33,7 @@ export default function FoodEditBottomSheet({
     item,
     onClose,
     onSave,
-    onDelete
+    onDelete,
 }: FoodEditBottomSheetProps) {
     const [editedItem, setEditedItem] = useState<FoodItem | null>(null);
 
@@ -34,92 +43,84 @@ export default function FoodEditBottomSheet({
         }
     }, [item]);
 
-    if (!isOpen || !editedItem) return null;
+    if (!isOpen || !editedItem) {
+        return null;
+    }
 
-    const handlePortionChange = (newPortion: number) => {
-        setEditedItem(prev => prev ? { ...prev, portion: newPortion } : null);
-    };
+    const estimatedCalories = Math.round(editedItem.calories * (editedItem.portion / 100));
 
     const handleSave = () => {
-        if (editedItem) {
-            onSave(editedItem);
-            onClose();
-        }
+        onSave(editedItem);
+        onClose();
     };
 
     return (
         <>
-            {/* Backdrop */}
-            <div
-                className="fixed inset-0 bg-black/60 z-50 transition-opacity"
-                onClick={onClose}
-            />
-
-            {/* Sheet */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 z-[51] rounded-t-2xl shadow-xl transform transition-transform duration-300 ease-out max-h-[80vh] overflow-y-auto w-full max-w-md mx-auto">
-
-                {/* Drag Handle */}
-                <div className="w-full h-6 flex items-center justify-center pt-2">
-                    <div className="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full" />
-                </div>
-
-                <div className="p-5 space-y-6 pb-safe-area-bottom">
-                    {/* Header */}
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-bold">음식 수정</h2>
-                        <button onClick={onClose} className="p-2 -mr-2 text-slate-400 hover:text-slate-600">
-                            <X className="w-6 h-6" />
-                        </button>
+            <Sheet open={isOpen} onOpenChange={onClose}>
+                <SheetContent>
+                    <div className="flex h-6 items-center justify-center pt-2">
+                        <div className="h-1.5 w-12 rounded-full bg-slate-300" />
                     </div>
 
-                    {/* Food Name Input */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300">음식 이름</label>
-                        <input
-                            type="text"
-                            value={editedItem.name}
-                            onChange={(e) => setEditedItem({ ...editedItem, name: e.target.value })}
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-lg font-medium focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
+                    <div className="space-y-5 p-5 pb-safe-area-bottom">
+                        <div className="flex items-start justify-between gap-3">
+                            <SheetHeader>
+                                <SheetTitle>수정하기</SheetTitle>
+                                <SheetDescription>이름과 양만 바꿀 수 있어요.</SheetDescription>
+                            </SheetHeader>
+                            <button type="button" onClick={onClose} className="p-2 -mr-2 text-slate-500 hover:text-slate-700" aria-label="닫기">
+                                <X className="h-6 w-6" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-slate-700">이름</label>
+                            <input
+                                type="text"
+                                value={editedItem.name}
+                                onChange={(e) => setEditedItem({ ...editedItem, name: e.target.value })}
+                                className="w-full rounded-[16px] border border-black bg-white px-4 py-3 text-lg font-medium text-slate-900 outline-none"
+                            />
+                        </div>
+
+                        <PortionSlider
+                            value={editedItem.portion}
+                            onChange={(portion) => setEditedItem((prev) => (prev ? { ...prev, portion } : null))}
                         />
-                    </div>
 
-                    {/* Portion Slider */}
-                    <PortionSlider
-                        value={editedItem.portion}
-                        onChange={handlePortionChange}
-                    />
+                        <div className="flex items-center justify-between rounded-[18px] border border-black bg-[#f7f7f7] p-4">
+                            <span className="text-sm text-slate-500">칼로리</span>
+                            <span className="text-lg font-bold text-slate-900">{estimatedCalories} kcal</span>
+                        </div>
 
-                    {/* Live Stats Preview */}
-                    <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl flex items-center justify-between">
-                        <span className="text-sm text-slate-500">예상 칼로리</span>
-                        <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                            {Math.round(editedItem.calories * (editedItem.portion / 100))} kcal
-                        </span>
+                        <SheetFooter>
+                            <Button
+                                type="button"
+                                onClick={() => {
+                                    if (confirm('이 음식을 목록에서 삭제하시겠습니까?')) {
+                                        onDelete(editedItem.id);
+                                        onClose();
+                                    }
+                                }}
+                                variant="outline"
+                                className="flex-none border-black bg-white px-4 text-slate-900 shadow-none"
+                                aria-label="삭제"
+                            >
+                                <Trash2 className="h-6 w-6" />
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={handleSave}
+                                size="lg"
+                                className="flex-1 border border-black bg-black text-white shadow-none"
+                                leftIcon={<Check className="h-5 w-5" />}
+                            >
+                                저장하기
+                            </Button>
+                        </SheetFooter>
                     </div>
-
-                    {/* Actions */}
-                    <div className="flex gap-3 pt-2">
-                        <button
-                            onClick={() => {
-                                if (confirm('이 음식을 목록에서 삭제하시겠습니까?')) {
-                                    onDelete(editedItem.id);
-                                    onClose();
-                                }
-                            }}
-                            className="flex-none p-4 rounded-xl border border-red-200 bg-red-50 text-red-500 dark:bg-red-900/20 dark:border-red-900 hover:bg-red-100"
-                        >
-                            <Trash2 className="w-6 h-6" />
-                        </button>
-                        <button
-                            onClick={handleSave}
-                            className="flex-1 py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2"
-                        >
-                            <Check className="w-5 h-5" />
-                            저장하기
-                        </button>
-                    </div>
-                </div>
-            </div>
+                </SheetContent>
+            </Sheet>
         </>
     );
 }

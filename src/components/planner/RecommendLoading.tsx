@@ -1,40 +1,67 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { Sparkles } from 'lucide-react';
+import { Card } from '@/components/common';
 
 const MESSAGES = [
-    "영양소 분석 중...",
-    "칼로리 계산 중...",
-    "최적의 메뉴 조합 찾는 중...",
-    "식단 구성 중..."
+    '입력한 메뉴를 기준값으로 정리하는 중...',
+    '남은 칼로리를 끼니별로 다시 배분하는 중...',
+    '식단 옵션 3가지를 비교하는 중...',
+    '와이어프레임 결과 화면을 준비하는 중...',
 ];
 
-const RecommendLoading = () => {
-    const [msgIndex, setMsgIndex] = useState(0);
+const RecommendLoading = ({
+    mealLabel,
+    selectedMenu,
+}: {
+    mealLabel?: string;
+    selectedMenu?: string;
+}) => {
+    const [messageIndex, setMessageIndex] = useState(0);
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setMsgIndex((prev) => (prev + 1) % MESSAGES.length);
-        }, 800);
+            setMessageIndex((prev) => (prev + 1) % MESSAGES.length);
+        }, 900);
+
         return () => clearInterval(interval);
     }, []);
 
     return (
-        <div className="flex flex-col items-center justify-center p-12 text-center animate-fade-in-up">
-            <div className="relative w-16 h-16 mb-6">
-                <div className="absolute inset-0 border-4 border-slate-100 rounded-full"></div>
-                <div className="absolute inset-0 border-4 border-primary-500 rounded-full border-t-transparent animate-spin"></div>
-                <div className="absolute inset-0 flex items-center justify-center text-xl animate-pulse">
-                    🤖
+        <Card padding="lg">
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full border border-black bg-white text-slate-900">
+                    <Sparkles className="h-7 w-7 animate-pulse" />
                 </div>
+                <h3 className="mt-5 text-xl font-semibold text-slate-900">
+                    {mealLabel ? `${mealLabel} 기준 추천을 계산하고 있어요` : '추천 식단을 계산하고 있어요'}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                    {selectedMenu ? `${selectedMenu}를 기준 메뉴로 사용 중입니다.` : '입력한 메뉴를 기반으로 나머지 끼니를 재구성합니다.'}
+                </p>
+
+                <div className="mt-6 w-full max-w-md rounded-[24px] border border-black bg-slate-50 p-5 text-left">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">In Progress</p>
+                    <div className="mt-4 space-y-3">
+                        {MESSAGES.map((message, index) => (
+                            <div key={message} className="flex gap-3">
+                                <div className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold ${
+                                    index <= messageIndex ? 'border-black bg-black text-white' : 'border-black bg-white text-slate-500'
+                                }`}>
+                                    <span className="text-[11px] font-semibold">{index + 1}</span>
+                                </div>
+                                <p className="text-sm leading-6 text-slate-600">{message}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <p className="mt-4 text-sm font-medium text-slate-500">
+                    {MESSAGES[messageIndex]}
+                </p>
             </div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
-                AI가 식단을 짜고 있어요
-            </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 min-h-[20px] transition-all duration-300">
-                {MESSAGES[msgIndex]}
-            </p>
-        </div>
+        </Card>
     );
 };
 

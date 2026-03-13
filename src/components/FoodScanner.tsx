@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import Link from 'next/link';
+import { useState, useRef, useCallback } from 'react';
+import { Camera, CheckCircle2, RotateCcw } from 'lucide-react';
 import { FoodData, FoodAnalysisResponse, needsVerification, hasMultipleFoods } from '@/types/food';
 import { getAnonymousUserId } from '@/lib/userId';
 import { compressImage, formatFileSize } from '@/lib/image-compress';
@@ -8,7 +10,7 @@ import FoodAnalysisResult from '@/components/scan/FoodAnalysisResult';
 import CandidateSelector from '@/components/CandidateSelector';
 import SimpleSnackbar from '@/components/SimpleSnackbar';
 import { useAuth } from '@/contexts/AuthContext';
-import UpgradePromptModal from '@/components/auth/UpgradePromptModal';
+import { Button, Card, DiagnosticCard, SuccessStateCard } from '@/components/common';
 // Import Supabase Client directly for storage upload
 import { createClient } from '@/lib/supabase/client';
 import { db } from '@/lib/db';
@@ -21,53 +23,16 @@ type Candidate = NonNullable<FoodData['candidates']>[number];
 interface FoodScannerProps {
     onAnalysisComplete?: (data: AnalyzedData) => void;
     onSave?: (data: AnalyzedData) => void;
+    mealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+    mealLabel?: string;
 }
 
-// Internal component for Typewriter effect
-const TypewriterMessage = ({ messages }: { messages: string[] }) => {
-    const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
-    const [currentText, setCurrentText] = useState('');
-    const [isDeleting, setIsDeleting] = useState(false);
-
-    useEffect(() => {
-        const typeSpeed = 50;
-        const deleteSpeed = 30;
-        const pauseTime = 2000;
-
-        const handleTyping = () => {
-            const fullMessage = messages[currentMessageIndex];
-
-            if (!isDeleting) {
-                // Typing
-                setCurrentText(fullMessage.substring(0, currentText.length + 1));
-
-                if (currentText.length === fullMessage.length) {
-                    setTimeout(() => setIsDeleting(true), pauseTime);
-                }
-            } else {
-                // Deleting
-                setCurrentText(fullMessage.substring(0, currentText.length - 1));
-
-                if (currentText.length === 0) {
-                    setIsDeleting(false);
-                    setCurrentMessageIndex((prev) => (prev + 1) % messages.length);
-                }
-            }
-        };
-
-        const timer = setTimeout(handleTyping, isDeleting ? deleteSpeed : typeSpeed);
-        return () => clearTimeout(timer);
-    }, [currentText, isDeleting, currentMessageIndex, messages]);
-
-    return (
-        <span className="inline-block min-h-[1.5em] align-bottom">
-            {currentText}
-            <span className="animate-pulse ml-0.5 border-r-2 border-current h-[1.2em] inline-block align-middle"></span>
-        </span>
-    );
-};
-
-export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerProps) {
+export default function FoodScanner({
+    onAnalysisComplete,
+    onSave,
+    mealType,
+    mealLabel,
+}: FoodScannerProps) {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [isCompressing, setIsCompressing] = useState(false);
     const [analyzedData, setAnalyzedData] = useState<AnalyzedData | null>(null);
@@ -85,8 +50,10 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
     const [isPublic, setIsPublic] = useState(false);
     const [message, setMessage] = useState<string | null>(null); // For Snackbar
     const { user } = useAuth();
-    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [isSaving, setIsSaving] = useState(false); // New saving state
+    const [didPersist, setDidPersist] = useState(false);
+    const [saveState, setSaveState] = useState<'idle' | 'success' | 'fallback'>('idle');
+    const [saveDiagnostic, setSaveDiagnostic] = useState<string | null>(null);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const supabase = createClient(); // Helper for client-side storage upload
@@ -100,6 +67,9 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
         setShowCandidates(false);
         setIsPublic(false);
         setCurrentFile(null);
+        setDidPersist(false);
+        setSaveState('idle');
+        setSaveDiagnostic(null);
 
         // ... existing preview code ...
         const objectUrl = URL.createObjectURL(file);
@@ -128,6 +98,9 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
             const formData = new FormData();
             formData.append('image', processedFile);
             formData.append('anonymousUserId', getAnonymousUserId());
+            if (mealType) {
+                formData.append('mealType', mealType);
+            }
 
             const response = await fetch('/api/analyze-image', {
                 method: 'POST',
@@ -162,7 +135,7 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
         } finally {
             setIsAnalyzing(false);
         }
-    }, [onAnalysisComplete]);
+    }, [mealType, onAnalysisComplete]);
 
     const handleDrag = useCallback((e: React.DragEvent) => {
         e.preventDefault();
@@ -202,6 +175,8 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
         setImageHash(null);
         setCurrentFile(null);
         setShowCandidates(false);
+        setDidPersist(false);
+        setSaveDiagnostic(null);
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
@@ -224,21 +199,38 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
         setShowCandidates(false); // Hide selector after selection
     };
 
+    const saveMealToDexie = async (data: AnalyzedData, storagePath: string, synced: boolean) => {
+        const isMulti = hasMultipleFoods(data);
+        const mealName = isMulti
+            ? `${data.foods[0].food_name} 외 ${data.foods.length - 1}개`
+            : data.food_name;
+
+        const totalCalories = isMulti
+            ? data.foods.reduce((acc, food) => acc + food.nutrition.calories, 0)
+            : data.nutrition.calories;
+
+        await db.meals.add({
+            name: mealName || 'Unknown Food',
+            calories: totalCalories || 0,
+            image_url: storagePath,
+            timestamp: new Date(),
+            synced,
+            food_data: data,
+        });
+    };
+
     const handleConfirm = async () => {
         if (!analyzedData || !imageHash || !currentFile) {
-            setMessage("저장할 데이터가 부족합니다.");
+            setMessage("저장할 정보가 부족합니다.");
             return;
         }
 
-        // Smart Persistance: If user is anonymous, save to Temp & LocalStorage, then Redirect
         if (!user) {
             setIsSaving(true);
             try {
-                // 1. Upload to Temp Storage (Public write allowed)
                 const anonId = getAnonymousUserId();
                 const today = new Date().toISOString().split('T')[0];
                 const ext = currentFile.name.split('.').pop() || 'jpg';
-                // Use 'temp/' prefix to distinguish from permanent uploads
                 const tempStoragePath = `temp/${anonId}/${Date.now()}_${imageHash.substring(0, 8)}.${ext}`;
 
                 const { error: uploadError } = await supabase.storage
@@ -250,38 +242,48 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
 
                 if (uploadError) {
                     console.error("Temp Upload failed", uploadError);
-                    throw new Error("이미지 임시 저장에 실패했습니다.");
+                    throw new Error("사진 업로드에 실패했습니다.");
                 }
 
-                // 2. Save Metadata to Dexie (Offline DB)
-                try {
-                    const isMulti = hasMultipleFoods(analyzedData);
-                    const mealName = isMulti
-                        ? `${analyzedData.foods[0].food_name} 외 ${analyzedData.foods.length - 1}개`
-                        : analyzedData.food_name;
+                const response = await fetch('/api/food/confirm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        anonymous_user_id: anonId,
+                        image_hash: imageHash,
+                        food_data: analyzedData,
+                        meal_type: mealType || 'lunch',
+                        include_in_public_feed: isPublic,
+                        processing_time_ms: processingTime,
+                        storage_path: tempStoragePath,
+                    }),
+                });
 
-                    const totalCalories = isMulti
-                        ? analyzedData.foods.reduce((acc, f) => acc + f.nutrition.calories, 0)
-                        : analyzedData.nutrition.calories;
-
-                    await db.meals.add({
-                        name: mealName || 'Unknown Food',
-                        calories: totalCalories || 0,
-                        image_url: tempStoragePath,
-                        timestamp: new Date(),
-                        synced: false,
-                        food_data: analyzedData
-                    });
-                } catch (dbError) {
-                    console.error("Dexie save failed", dbError);
+                const result = await response.json();
+                if (!result.success) {
+                    throw new Error(result.detail ? `${result.error}: ${result.detail}` : (result.error || '비회원 저장에 실패했습니다.'));
                 }
 
-                // 3. Show Upgrade Modal (User proceeds to Login)
-                setShowUpgradeModal(true);
-
+                await saveMealToDexie(analyzedData, tempStoragePath, true);
+                setMessage("기록이 저장되었습니다.");
+                setDidPersist(true);
+                setSaveState('success');
+                setSaveDiagnostic('기록 저장이 끝났습니다. 전체 목록에는 잠시 후 반영될 수 있습니다.');
+                if (onSave) onSave(analyzedData);
             } catch (e: any) {
                 console.error(e);
-                setMessage(e.message || "임시 저장 중 오류가 발생했습니다.");
+                try {
+                    await saveMealToDexie(analyzedData, '', false);
+                    setMessage("이 기기에 기록을 남겼습니다.");
+                    setDidPersist(true);
+                    setSaveState('fallback');
+                    setSaveDiagnostic(`전체 목록 반영이 늦어질 수 있어 이 기기에 먼저 저장했습니다. 원인: ${e.message || '알 수 없는 오류'}`);
+                    if (onSave) onSave(analyzedData);
+                } catch (dbError) {
+                    console.error(dbError);
+                    setMessage(e.message || "기록 저장에 실패했습니다.");
+                    setSaveDiagnostic(`기록 저장에 실패했습니다. 원인: ${e.message || '알 수 없는 오류'}`);
+                }
             } finally {
                 setIsSaving(false);
             }
@@ -309,7 +311,6 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                 throw new Error("이미지 업로드에 실패했습니다.");
             }
 
-            // 2. Save Metadata to DB via API
             const response = await fetch('/api/food/confirm', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -317,6 +318,7 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                     anonymous_user_id: anonId,
                     image_hash: imageHash,
                     food_data: analyzedData,
+                    meal_type: mealType || 'lunch',
                     include_in_public_feed: isPublic,
                     processing_time_ms: processingTime,
                     storage_path: storagePath // Now provided by Client after secure upload
@@ -325,21 +327,46 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
 
             const result = await response.json();
             if (result.success) {
-                setMessage("식사가 기록되었습니다! 📝");
+                await saveMealToDexie(analyzedData, storagePath, true);
+                setMessage("기록이 저장되었습니다.");
+                setDidPersist(true);
+                setSaveState('success');
+                setSaveDiagnostic('기록 저장이 끝났습니다. 전체 목록에는 잠시 후 반영될 수 있습니다.');
                 if (onSave) onSave(analyzedData);
             } else {
-                throw new Error(result.error);
+                throw new Error(result.detail ? `${result.error}: ${result.detail}` : result.error);
             }
         } catch (e: any) {
             console.error(e);
-            setMessage(e.message || "저장에 실패했습니다.");
+            setMessage(e.message || "기록 저장에 실패했습니다.");
+            setSaveDiagnostic(`기록 저장에 실패했습니다. 원인: ${e.message || '알 수 없는 오류'}`);
         } finally {
             setIsSaving(false);
         }
     };
 
+    const progressTitle = isSaving
+        ? '기록을 저장하고 있어요'
+        : isCompressing
+            ? '사진을 분석하기 좋게 정리하고 있어요'
+            : 'AI가 음식과 영양 정보를 계산하고 있어요';
+
+    const progressDescription = isSaving
+        ? '저장 중입니다.'
+        : isCompressing
+            ? '이미지 준비 중입니다.'
+            : '분석 중입니다.';
+
     return (
         <div className="w-full space-y-4">
+            {!previewUrl && (
+                <Card padding="lg" className="border border-black shadow-none">
+                    <h2 className="mt-3 text-2xl font-semibold text-slate-900 dark:text-white">
+                        {mealLabel ? `${mealLabel} 식사 촬영` : '식사 촬영'}
+                    </h2>
+                </Card>
+            )}
+
             {/* Upload Area */}
             {!previewUrl && (
                 <div
@@ -349,11 +376,10 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                     onDragOver={handleDrag}
                     onDrop={handleDrop}
                     className={`
-                        relative border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer
-                        transition-all duration-200
+                        relative cursor-pointer rounded-[24px] border-2 border-dashed p-8 text-center transition-all duration-200
                         ${dragActive
-                            ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20'
-                            : 'border-slate-300 dark:border-slate-600 hover:border-orange-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                            ? 'border-black bg-[#f3f3f3]'
+                            : 'border-black bg-white hover:bg-[#fafafa]'
                         }
                     `}
                 >
@@ -366,20 +392,15 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                     />
 
                     <div className="space-y-3">
-                        <div className="text-5xl">📸</div>
-                        <p className="text-lg font-medium text-slate-700 dark:text-slate-300">
-                            음식 사진을 촬영하거나 업로드하세요
+                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">UPLOAD AREA</div>
+                        <p className="mt-2 text-lg font-medium text-slate-900 dark:text-white">
+                            음식 사진을 업로드하세요
                         </p>
                         <p className="text-sm text-slate-500 dark:text-slate-400">
-                            드래그 앤 드롭 또는 클릭하여 선택
+                            클릭해서 선택
                         </p>
-                        <div className="pt-2">
-                            <span className="inline-block px-3 py-1 bg-violet-50 text-violet-600 dark:bg-violet-900/20 dark:text-violet-300 text-xs rounded-full border border-violet-100 dark:border-violet-800">
-                                ✨ 생성형 인공지능이 분석합니다
-                            </span>
-                        </div>
                         <p className="text-xs text-slate-400">
-                            지원 형식: JPEG, PNG, WebP, HEIC (최대 10MB)
+                            JPEG, PNG, WebP, HEIC / 최대 10MB
                         </p>
                     </div>
                 </div>
@@ -399,41 +420,39 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
 
                         {/* Compressing/Analyzing/Saving Overlay */}
                         {(isCompressing || isAnalyzing || isSaving) && (
-                            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/90 dark:bg-black/90 backdrop-blur-xl transition-all duration-500">
-                                {/* Liquid Gradient Orb */}
-                                <div className="relative w-40 h-40">
-                                    <div className="absolute top-0 -left-4 w-32 h-32 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
-                                    <div className="absolute top-0 -right-4 w-32 h-32 bg-cyan-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
-                                    <div className="absolute -bottom-8 left-10 w-32 h-32 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
-
-                                    <div className="absolute inset-4 bg-white/30 dark:bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 shadow-inner">
-                                        <div className="text-3xl animate-pulse text-white drop-shadow-lg">
-                                            {isSaving ? '💾' : (isCompressing ? '⚡' : '✨')}
-                                        </div>
+                            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/94 p-4 dark:bg-black/88">
+                                <div
+                                    className="w-full max-w-md rounded-[24px] border border-black bg-white p-6 shadow-none"
+                                    style={{
+                                        backgroundColor: 'rgba(255,255,255,0.96)',
+                                    }}
+                                >
+                                    <div className="inline-flex rounded-full border border-black px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
+                                        {isSaving ? 'SAVE' : isCompressing ? 'PREP' : 'ANALYSIS'}
                                     </div>
-                                </div>
-
-                                {/* Text Content */}
-                                <div className="mt-8 text-center space-y-3 z-20">
-                                    <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 animate-gradient-text">
-                                        {isSaving ? 'Saving...' : (isCompressing ? 'Optimizing...' : 'Analyzing...')}
+                                    <h3 className="mt-4 text-xl font-semibold text-slate-900">
+                                        {progressTitle}
                                     </h3>
-                                    <div className="text-sm text-slate-600 dark:text-slate-300 font-medium px-8 min-h-[40px] flex items-center justify-center">
-                                        {isSaving ? (
-                                            <p className="animate-pulse">안전하게 기록을 저장하고 있습니다 🔒</p>
-                                        ) : isCompressing ? (
-                                            <p className="animate-pulse">더 선명한 분석을 위해 다듬고 있어요 ✂️</p>
-                                        ) : (
-                                            <TypewriterMessage
-                                                messages={[
-                                                    "AI가 맛있는 냄새를 맡고 있습니다... 👃",
-                                                    "칼로리를 계산하느라 머리를 굴리는 중... 🤯",
-                                                    "이 음식, 정말 맛있어 보이네요! 😋",
-                                                    "영양 성분을 꼼꼼히 체크하고 있어요 🔍",
-                                                    "잠시만요, 셰프에게 물어보는 중입니다... 👨‍🍳"
-                                                ]}
-                                            />
-                                        )}
+                                    <p className="mt-2 text-sm text-slate-600">
+                                        {progressDescription}
+                                    </p>
+
+                                    <div className="mt-5 space-y-3">
+                                        <ProgressChecklistItem
+                                            title="이미지 준비"
+                                            description="압축 및 업로드용 전처리"
+                                            status={isCompressing ? 'current' : previewUrl ? 'done' : 'pending'}
+                                        />
+                                        <ProgressChecklistItem
+                                            title="음식 분석"
+                                            description="음식명과 영양 정보 추정"
+                                            status={isAnalyzing ? 'current' : analyzedData ? 'done' : (isSaving ? 'done' : 'pending')}
+                                        />
+                                        <ProgressChecklistItem
+                                            title="기록 저장"
+                                            description="기록을 남기고 목록에 반영"
+                                            status={isSaving ? 'current' : didPersist ? 'done' : 'pending'}
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -479,6 +498,7 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                             <FoodAnalysisResult
                                 imageSrc={previewUrl}
                                 data={analyzedData}
+                                mealLabel={mealLabel}
                                 onSave={(finalData) => {
                                     setAnalyzedData(finalData as any); // Update local state with final edit
                                     // Slight delay to allow state update before save
@@ -496,26 +516,77 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                                         onChange={(e) => setIsPublic(e.target.checked)}
                                         className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                                     />
-                                    <span>내 기록을 익명 집계에 포함 (기본 OFF)</span>
+                                    <span>익명 집계에 포함</span>
                                 </label>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 pl-6">
-                                    사진은 서비스 개선을 위해 안전하게 저장되며, 음식명/분류/신뢰도만 익명으로 공개 피드에 집계됩니다.
-                                </p>
                             </div>
+
+                            <Card padding="lg" className="border border-black shadow-none">
+                                <h3 className="text-base font-semibold text-slate-900 dark:text-white">
+                                    {didPersist ? '이제 여기서 끝내거나 다음으로 넘어가면 됩니다' : '저장 후 확인'}
+                                </h3>
+
+                                {didPersist && (
+                                    <>
+                                        <SuccessStateCard
+                                            tone={saveState === 'success' ? 'success' : 'muted'}
+                                            title={saveState === 'success' ? '기록이 저장되었습니다' : '이 기기에 기록을 남겼습니다'}
+                                            description={saveState === 'success'
+                                                ? '기록은 저장되었습니다. 지금은 기록 확인이나 다시 기록만 해도 충분합니다.'
+                                                : '인터넷 상태에 따라 전체 목록 반영이 늦을 수 있어, 우선 이 기기에 기록을 남겨뒀습니다.'}
+                                        />
+                                        {saveDiagnostic && (
+                                            <div className="mt-3">
+                                                <DiagnosticCard
+                                                    label="저장 상태"
+                                                    tone={saveState === 'success' ? 'info' : 'warning'}
+                                                    title={saveState === 'success' ? '전체 목록 반영 안내' : '저장 안내'}
+                                                    description={saveDiagnostic}
+                                                />
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+
+                                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                                    <Link href="/history" className="block">
+                                        <Button
+                                            size="lg"
+                                            fullWidth
+                                            className="w-full border border-black bg-black text-white shadow-none"
+                                        >
+                                            보관함 보기
+                                        </Button>
+                                    </Link>
+                                    <Button
+                                        variant="outline"
+                                        size="lg"
+                                        fullWidth
+                                        onClick={resetScanner}
+                                        className="w-full border-black bg-white shadow-none"
+                                        leftIcon={<RotateCcw className="h-4 w-4" />}
+                                    >
+                                        다시 기록
+                                    </Button>
+                                </div>
+                                <div className="mt-3">
+                                    <Link href="/meal" className="text-sm font-medium text-slate-600 underline-offset-4 hover:underline">
+                                        추천이 필요하면 다음 식사 추천 보기
+                                    </Link>
+                                </div>
+                            </Card>
 
                         </>
                     )}
 
-                    {/* Reset Button */}
-                    <button
-                        onClick={resetScanner}
-                        disabled={isSaving}
-                        className="w-full py-3 rounded-xl border-2 border-slate-300 dark:border-slate-600 
-                                    text-slate-700 dark:text-slate-300 font-medium
-                                    hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
-                    >
-                        다른 사진 분석하기
-                    </button>
+                    {!didPersist && (
+                        <button
+                            onClick={resetScanner}
+                            disabled={isSaving}
+                            className="w-full rounded-xl border-2 border-slate-300 py-3 font-medium text-slate-700 transition-colors hover:bg-slate-100 disabled:opacity-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+                        >
+                            다른 사진 분석하기
+                        </button>
+                    )}
                 </div>
             )
             }
@@ -526,11 +597,38 @@ export default function FoodScanner({ onAnalysisComplete, onSave }: FoodScannerP
                 message={message || ''}
                 onClose={() => setMessage(null)}
             />
-            <UpgradePromptModal
-                isOpen={showUpgradeModal}
-                onClose={() => setShowUpgradeModal(false)}
-                message="식사 기록을 안전하게 저장하려면 계정이 필요해요."
-            />
         </div >
+    );
+}
+
+function ProgressChecklistItem({
+    title,
+    description,
+    status,
+}: {
+    title: string;
+    description: string;
+    status: 'pending' | 'current' | 'done';
+}) {
+    const active = status === 'current';
+    const done = status === 'done';
+
+    return (
+        <div className="flex gap-3">
+            <div
+                className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border"
+                style={{
+                    backgroundColor: done ? 'var(--color-primary-soft)' : 'var(--color-surface-muted)',
+                    borderColor: active ? 'var(--color-primary)' : 'var(--color-border)',
+                    color: done || active ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                }}
+            >
+                {done ? <CheckCircle2 className="h-4 w-4" /> : <span className="text-[11px] font-semibold">{active ? '...' : '•'}</span>}
+            </div>
+            <div>
+                <p className="font-medium text-slate-900 dark:text-white">{title}</p>
+                <p className="mt-1 text-sm leading-6 text-slate-500 dark:text-slate-400">{description}</p>
+            </div>
+        </div>
     );
 }

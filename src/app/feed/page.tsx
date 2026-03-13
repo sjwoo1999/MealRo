@@ -1,8 +1,12 @@
+import BetaFeedPage from '@/components/feed/BetaFeedPage';
+
 export default function FeedPage() {
     return (
-        <div className="p-4">
-            <h1 className="text-2xl font-bold mb-4">피드</h1>
-            <p className="text-slate-500">주변 맛집과 커뮤니티 피드가 여기에 표시됩니다.</p>
-        </div>
+        <BetaFeedPage
+            mode="feed"
+            label="피드"
+            title="공개 기록"
+            description="최근 기록을 바로 볼 수 있어요."
+        />
     );
 }
