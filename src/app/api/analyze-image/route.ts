@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
         const formData = await request.formData();
         const file = formData.get('image') as File | null;
         const anonymousUserId = formData.get('anonymousUserId') as string | null;
+        const mealType = formData.get('mealType') as string | null;
 
         if (!file) {
             return NextResponse.json(
@@ -61,7 +62,8 @@ export async function POST(request: NextRequest) {
         if (analysisResult.success) {
             return NextResponse.json({
                 ...analysisResult,
-                image_hash: imageHash
+                image_hash: imageHash,
+                meal_type: mealType,
             });
         }
 

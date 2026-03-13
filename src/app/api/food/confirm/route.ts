@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { FoodData, hasMultipleFoods } from '@/types/food';
 
-// Standard client for private logging (can be anon key)
+// Fallback client when service role is unavailable.
 const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -84,6 +84,7 @@ export async function POST(request: NextRequest) {
             anonymous_user_id,
             image_hash,
             food_data,
+            meal_type,
             include_in_public_feed = false, // Client opt-in
             processing_time_ms,
             storage_path // Optional storage path from client
@@ -91,6 +92,7 @@ export async function POST(request: NextRequest) {
             anonymous_user_id: string;
             image_hash: string;
             food_data: FoodData | { foods: FoodData[] };
+            meal_type?: 'breakfast' | 'lunch' | 'dinner' | 'snack';
             include_in_public_feed?: boolean;
             processing_time_ms?: number;
             storage_path?: string;
@@ -105,6 +107,7 @@ export async function POST(request: NextRequest) {
 
         // Normalize to array
         const foods = hasMultipleFoods(food_data) ? food_data.foods : [food_data];
+        const dbClient = supabaseAdmin ?? supabase;
 
         // 1. Log to Private User History (Always)
         const totals = foods.reduce(
@@ -117,7 +120,16 @@ export async function POST(request: NextRequest) {
             { calories: 0, protein: 0, carbs: 0, fat: 0 }
         );
 
-        const { data, error } = await supabase
+        console.log('[food/confirm] insert start', {
+            anonymous_user_id,
+            meal_type: meal_type || getMealType(new Date().getHours()),
+            food_count: foods.length,
+            storage_path: storage_path || null,
+            include_in_public_feed,
+            usingServiceRole: Boolean(supabaseAdmin),
+        });
+
+        const { data, error } = await dbClient
             .from('image_analysis_logs')
             .insert({
                 anonymous_user_id,
@@ -138,10 +150,64 @@ export async function POST(request: NextRequest) {
         if (error) {
             console.error('Failed to confirm food:', error);
             return NextResponse.json(
-                { success: false, error: 'Failed to save log' },
+                {
+                    success: false,
+                    error: 'Failed to save log',
+                    detail: error.message,
+                    code: error.code || 'IMAGE_ANALYSIS_LOG_INSERT_FAILED',
+                },
                 { status: 500 }
             );
         }
+
+        const mealLogInsert = await dbClient
+            .from('user_meal_logs')
+            .insert({
+                anonymous_user_id,
+                meal_type: meal_type || getMealType(new Date().getHours()),
+                foods,
+                image_analysis_id: data.id,
+                total_calories: totals.calories,
+                total_protein: totals.protein,
+                total_carbs: totals.carbs,
+                total_fat: totals.fat,
+                notes: null,
+            })
+            .select('id, created_at')
+            .single();
+
+        const mealLogData = mealLogInsert.data;
+        const mealLogError = mealLogInsert.error;
+
+        if (mealLogError) {
+            console.error('Failed to save meal log:', mealLogError);
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: 'Failed to save meal log',
+                    detail: mealLogError.message,
+                    code: mealLogError.code || 'USER_MEAL_LOG_INSERT_FAILED',
+                },
+                { status: 500 }
+            );
+        }
+
+        console.log('[food/confirm] insert success', {
+            analysis_id: data.id,
+            meal_log_id: mealLogData?.id || null,
+            meal_log_created_at: mealLogData?.created_at || null,
+        });
+
+        const recentMealLogs = await dbClient
+            .from('user_meal_logs')
+            .select('id, created_at')
+            .order('created_at', { ascending: false })
+            .limit(3);
+
+        console.log('[food/confirm] recent meal logs after insert', {
+            ids: recentMealLogs.data?.map((row) => row.id) || [],
+            latest_created_at: recentMealLogs.data?.[0]?.created_at || null,
+        });
 
         // 2. Insert into Public Feed (Optional & Sanitized)
         if (include_in_public_feed && supabaseAdmin) {
@@ -173,7 +239,11 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        return NextResponse.json({ success: true, id: data.id });
+        return NextResponse.json({
+            success: true,
+            id: data.id,
+            meal_log_id: mealLogData?.id || null,
+        });
 
     } catch (error) {
         console.error('Confirm API error:', error);

@@ -16,6 +16,7 @@ const KOREAN_FOOD_ANALYSIS_PROMPT = `당신은 한국 음식 전문 영양사입
 3. **분석**: 파악된 음식의 일반적인 영양소 정보를 계산합니다.
 
 분석 결과는 **반드시 아래 JSON 형식**으로만 응답하세요. Markdown 포맷을 쓰지 마세요.
+가능한 한 **짧고 간결한 값**만 넣으세요.
 
 **단일 음식인 경우:**
 {
@@ -38,7 +39,7 @@ const KOREAN_FOOD_ANALYSIS_PROMPT = `당신은 한국 음식 전문 영양사입
   "candidates": [
     {
       "food_name": "다른 가능성 있는 음식명 (예: 김치찌개 -> 부대찌개)",
-      "reasoning": "유사한 특징이나 헷갈릴 수 있는 이유",
+      "reasoning": "유사한 특징이나 헷갈릴 수 있는 이유를 짧게",
       "nutrition": { "calories": 0, "protein": 0, "carbohydrates": 0, "fat": 0, "sodium": 0, "fiber": 0 }
     }
   ]
@@ -47,14 +48,36 @@ const KOREAN_FOOD_ANALYSIS_PROMPT = `당신은 한국 음식 전문 영양사입
 **여러 음식이 보이는 경우:**
 {
   "foods": [
-    { /* 위와 동일한 형식으로 각 음식을 분석 */ }
+    {
+      "reasoning": "이 음식으로 판단한 근거를 1문장으로 요약",
+      "food_name": "음식명 (한글)",
+      "food_name_en": "Food name (English)",
+      "confidence": 0.0-1.0,
+      "serving_size": "1인분 기준 그램수 (예: 1인분 (300g))",
+      "ingredients": ["주요 재료 3-5개"],
+      "nutrition": {
+        "calories": 숫자(kcal),
+        "protein": 숫자(g),
+        "carbohydrates": 숫자(g),
+        "fat": 숫자(g),
+        "sodium": 숫자(mg),
+        "fiber": 숫자(g)
+      },
+      "tags": ["한식", "국물요리"],
+      "warnings": ["알레르기 유발 성분 등"],
+      "candidates": []
+    }
   ]
 }
 
 주의사항:
 - **반드시 JSON 객체만** 반환하세요. 앞뒤에 \`\`\`json 같은 태그를 붙이지 마세요.
 - 음식이 명확하지 않아도 최대한 추론하세요.
-- 음식이 아닌 것이 **확실할 때만** {"error": "UNRECOGNIZED_FOOD"} 반환.`;
+- 음식이 아닌 것이 **확실할 때만** {"error": "UNRECOGNIZED_FOOD"} 반환하세요.
+- 음식이 여러 개면 **가장 확실한 최대 5개까지만** 반환하세요.
+- 각 음식의 reasoning은 **한 문장, 30자 이내**로 짧게 작성하세요.
+- ingredients는 최대 4개, warnings는 최대 2개까지만 작성하세요.
+- candidates는 **헷갈릴 때만 최대 1개** 넣고, 확신이 높으면 빈 배열로 두세요.`;
 
 export async function analyzeFoodImageWithOpenAI(
     imageBase64: string,
@@ -86,15 +109,22 @@ export async function analyzeFoodImageWithOpenAI(
                 },
             ],
             response_format: { type: 'json_object' }, // Enforce JSON
-            max_tokens: 1500,
+            max_tokens: 2500,
         });
 
         // Extract output content
         const text = response.choices[0].message.content || '';
+        const finishReason = response.choices[0].finish_reason;
 
-        // Debug logging
-        console.log('OpenAI Response received:', JSON.stringify(response).substring(0, 500));
-        console.log('Output text:', text.substring(0, 300));
+        // Debug logging: log summary/preview so truncated console output is not mistaken for API truncation.
+        const responsePreview = JSON.stringify(response).slice(0, 500);
+        const textPreview = text.slice(0, 300);
+        console.log('OpenAI Response summary:', {
+            finishReason,
+            contentLength: text.length,
+            responsePreview,
+        });
+        console.log('OpenAI Output preview:', textPreview);
 
         // If empty response, return error
         if (!text || text.trim() === '') {
@@ -108,14 +138,27 @@ export async function analyzeFoodImageWithOpenAI(
             };
         }
 
+        if (finishReason === 'length') {
+            console.error('OpenAI response truncated due to token limit');
+            return {
+                success: false,
+                error: {
+                    code: FoodAnalysisErrorCode.API_ERROR,
+                    message: 'AI 응답이 중간에 잘렸습니다. 다시 시도해주세요.',
+                },
+            };
+        }
+
         // Parse JSON response
         let parsedResponse;
         try {
-            // Remove potential markdown code blocks
-            const cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-            parsedResponse = JSON.parse(cleanedText);
+            parsedResponse = parseModelJson(text);
         } catch {
-            console.error('Failed to parse OpenAI response:', text);
+            console.error('Failed to parse OpenAI response', {
+                contentLength: text.length,
+                head: text.slice(0, 300),
+                tail: text.slice(-300),
+            });
             return {
                 success: false,
                 error: {
@@ -163,6 +206,28 @@ export async function analyzeFoodImageWithOpenAI(
                 message: error instanceof Error ? error.message : '서버 오류가 발생했습니다',
             },
         };
+    }
+}
+
+function parseModelJson(rawText: string) {
+    const cleanedText = rawText
+        .replace(/```json\s*/gi, '')
+        .replace(/```\s*/g, '')
+        .trim();
+
+    try {
+        return JSON.parse(cleanedText);
+    } catch {
+        // Try to recover the first JSON object from mixed text responses.
+        const firstBrace = cleanedText.indexOf('{');
+        const lastBrace = cleanedText.lastIndexOf('}');
+
+        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+            const jsonSlice = cleanedText.slice(firstBrace, lastBrace + 1);
+            return JSON.parse(jsonSlice);
+        }
+
+        throw new Error('Invalid JSON response');
     }
 }
 

@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createAdminSupabaseClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
 
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY! // Changed from NEXT_PUBLIC_SUPABASE_ANON_KEY!
-); // Removed the ": null;" part as it was syntactically incomplete without a condition
+const supabase = createAdminSupabaseClient({ preferPrimary: true });
 
 export async function GET(request: NextRequest) {
     try {
+        if (!supabase) {
+            return NextResponse.json(
+                { success: false, error: 'Server configuration error' },
+                { status: 500 }
+            );
+        }
+
         const { searchParams } = new URL(request.url);
         const userId = searchParams.get('user_id');
         const startDate = searchParams.get('start_date'); // YYYY-MM-DD
