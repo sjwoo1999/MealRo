@@ -2,53 +2,70 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, BarChart2, Camera, MapPin, User } from 'lucide-react';
+import { Camera, Home, User, Users } from 'lucide-react';
+import { PRIMARY_NAV_ITEMS, isActivePath, isShellHiddenPath } from './navigation';
 
 export default function BottomNavigation() {
     const pathname = usePathname();
 
-    // Hide on onboarding and scan pages if needed, or maintain consistency
-    // Usually hidden on full-screen flows like onboarding
-    if (pathname.startsWith('/onboarding') || pathname.startsWith('/auth')) {
+    if (isShellHiddenPath(pathname)) {
         return null;
     }
 
-    const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/');
-
     return (
-        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 pb-safe-area-bottom lg:hidden">
-            <div className="flex justify-around items-center h-16">
-                {/* Home */}
-                <Link href="/" className="flex flex-col items-center justify-center w-full h-full">
-                    <Home className={`w-6 h-6 ${pathname === '/' ? 'text-emerald-500' : 'text-slate-400'}`} />
-                    <span className={`text-[10px] mt-1 ${pathname === '/' ? 'text-emerald-500 font-medium' : 'text-slate-400'}`}>홈</span>
-                </Link>
-
-                {/* Insights */}
-                <Link href="/insights" className="flex flex-col items-center justify-center w-full h-full">
-                    <BarChart2 className={`w-6 h-6 ${isActive('/insights') ? 'text-emerald-500' : 'text-slate-400'}`} />
-                    <span className={`text-[10px] mt-1 ${isActive('/insights') ? 'text-emerald-500 font-medium' : 'text-slate-400'}`}>분석</span>
-                </Link>
-
-                {/* FAB (Scan) - Centered & Elevated */}
-                <div className="relative -top-6">
-                    <Link href="/scan" className="flex items-center justify-center w-14 h-14 rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-colors">
-                        <Camera className="w-7 h-7" />
-                    </Link>
+        <nav className="fixed inset-x-0 bottom-0 z-50 lg:hidden" aria-label="하단 내비게이션">
+            <div className="mx-auto max-w-md px-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
+                <div className="rounded-2xl border border-line bg-white/88 px-2 py-2 shadow-sm backdrop-blur-xl">
+                    <div className="grid grid-cols-4 items-center gap-1">
+                        <NavLink pathname={pathname} item={{ href: '/', label: '홈', match: 'exact' }} />
+                        <NavLink pathname={pathname} item={{ href: '/scan', label: '기록', match: 'prefix' }} />
+                        <NavLink pathname={pathname} item={{ href: '/feed', label: '피드', match: 'prefix' }} />
+                        <NavLink pathname={pathname} item={{ href: '/mypage', label: '마이', match: 'prefix' }} />
+                    </div>
                 </div>
-
-                {/* Feed */}
-                <Link href="/feed" className="flex flex-col items-center justify-center w-full h-full">
-                    <MapPin className={`w-6 h-6 ${isActive('/feed') ? 'text-emerald-500' : 'text-slate-400'}`} />
-                    <span className={`text-[10px] mt-1 ${isActive('/feed') ? 'text-emerald-500 font-medium' : 'text-slate-400'}`}>피드</span>
-                </Link>
-
-                {/* MyPage */}
-                <Link href="/mypage" className="flex flex-col items-center justify-center w-full h-full">
-                    <User className={`w-6 h-6 ${isActive('/mypage') ? 'text-emerald-500' : 'text-slate-400'}`} />
-                    <span className={`text-[10px] mt-1 ${isActive('/mypage') ? 'text-emerald-500 font-medium' : 'text-slate-400'}`}>마이</span>
-                </Link>
             </div>
         </nav>
     );
+}
+
+function NavLink({
+    pathname,
+    item,
+}: {
+    pathname: string;
+    item: (typeof PRIMARY_NAV_ITEMS)[number];
+}) {
+    const active = isActivePath(pathname, item);
+
+    return (
+        <Link
+            href={item.href}
+            className={`flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-xl px-2 text-center transition-colors ${
+                active ? 'bg-surface-muted text-accent font-semibold' : 'text-copy-subtle hover:text-copy-muted hover:bg-surface-muted/50'
+            }`}
+            aria-current={active ? 'page' : undefined}
+        >
+            {getIcon(item.href)}
+            <span className="text-[11px] font-medium">
+                {item.mobileLabel ?? item.label}
+            </span>
+        </Link>
+    );
+}
+
+function getIcon(href: string) {
+    const className = 'h-5 w-5';
+
+    switch (href) {
+        case '/':
+            return <Home className={className} />;
+        case '/scan':
+            return <Camera className={className} />;
+        case '/feed':
+            return <Users className={className} />;
+        case '/mypage':
+            return <User className={className} />;
+        default:
+            return <Camera className={className} />;
+    }
 }

@@ -29,19 +29,19 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         },
         ref
     ) => {
-        const baseStyles = 'inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+        const baseStyles = 'ui-button inline-flex items-center justify-center font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
 
         const variants = {
-            primary: 'bg-green-500 hover:bg-green-600 text-white focus:ring-green-500',
-            secondary: 'bg-slate-100 hover:bg-slate-200 text-slate-700 focus:ring-slate-500',
-            outline: 'border-2 border-green-500 text-green-600 hover:bg-green-50 focus:ring-green-500',
-            ghost: 'bg-transparent hover:bg-slate-100 text-slate-600 focus:ring-slate-400',
+            primary: 'ui-button-primary text-white focus:ring-accent',
+            secondary: 'ui-button-secondary focus:ring-accent',
+            outline: 'ui-button-outline focus:ring-accent',
+            ghost: 'ui-button-ghost focus:ring-accent',
         };
 
         const sizes = {
-            sm: 'px-3 py-1.5 text-xs lg:px-4 lg:py-2 lg:text-sm',
-            md: 'px-4 py-2 text-sm lg:px-5 lg:py-2.5 lg:text-base',
-            lg: 'px-6 py-3 text-base lg:px-8 lg:py-3.5 lg:text-lg',
+            sm: 'min-h-9 px-3.5 py-2 text-xs lg:min-h-10 lg:px-4 lg:text-sm',
+            md: 'min-h-11 px-4 py-2.5 text-sm lg:min-h-12 lg:px-5 lg:text-base',
+            lg: 'min-h-12 px-5 py-3 text-base lg:min-h-14 lg:px-7 lg:text-lg',
         };
 
         const widthClass = fullWidth ? 'w-full' : '';

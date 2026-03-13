@@ -1,4 +1,5 @@
 import { Camera } from 'lucide-react';
+import Button from '@/components/common/Button';
 
 interface GuestTrialProps {
     onNext: () => void;
@@ -6,41 +7,46 @@ interface GuestTrialProps {
 
 export default function GuestTrial({ onNext }: GuestTrialProps) {
     return (
-        <div className="flex flex-col h-full bg-black text-white p-6 relative overflow-hidden">
-            {/* Background Decor */}
-            <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-black/50 to-transparent z-10" />
+        <div className="flex min-h-screen flex-col bg-white p-6">
+            <div className="flex flex-1 flex-col items-center justify-center text-center">
+                <div className="w-full max-w-md rounded-[28px] border border-black bg-white p-6">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-black">
+                        <Camera className="h-8 w-8 text-slate-900" />
+                    </div>
 
-            <div className="relative z-20 flex-1 flex flex-col items-center justify-center text-center space-y-6">
-                <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center mb-4 animate-pulse">
-                    <Camera className="w-10 h-10 text-emerald-400" />
-                </div>
+                    <h2 className="mt-6 text-2xl font-bold">
+                        음식 사진을 한 번
+                        <br />
+                        찍어보세요
+                    </h2>
 
-                <h2 className="text-2xl font-bold">
-                    지금 드시는 음식을<br />
-                    찍어보세요
-                </h2>
+                    <p className="mt-3 text-sm leading-6 text-slate-500">
+                        회원가입 없이도 먼저 분석 흐름을 체험할 수 있습니다.
+                    </p>
 
-                <p className="text-white/60">
-                    회원가입 없이 AI가 즉시 영양소를<br />분석해드립니다.
-                </p>
-
-                {/* Demo Interface */}
-                <div className="w-full max-w-xs aspect-[3/4] rounded-3xl border-2 border-white/20 bg-white/5 backdrop-blur-sm mt-8 relative flex items-center justify-center">
-                    <span className="text-sm text-white/40">Camera Preview</span>
-                    <button
-                        onClick={onNext}
-                        className="absolute bottom-6 w-16 h-16 rounded-full bg-white border-4 border-emerald-500/50"
-                    />
+                    <div className="mt-8 aspect-[3/4] w-full rounded-[24px] border border-black bg-slate-50 p-5">
+                        <div className="flex h-full flex-col justify-between">
+                            <div className="text-left">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                    Trial Camera
+                                </p>
+                            </div>
+                            <div className="flex justify-center">
+                                <button
+                                    onClick={onNext}
+                                    className="h-16 w-16 rounded-full border border-black bg-white"
+                                    aria-label="다음 단계로 이동"
+                                />
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div className="relative z-20 text-center pt-4">
-                <button
-                    onClick={onNext} // In reality, this would skip scanning
-                    className="text-white/40 hover:text-white text-sm"
-                >
+            <div className="border-t border-black pt-6 text-center">
+                <Button variant="ghost" onClick={onNext}>
                     건너뛰기
-                </button>
+                </Button>
             </div>
         </div>
     );

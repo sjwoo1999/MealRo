@@ -24,29 +24,30 @@ const StepBasicInfo = ({ data, onChange, errors }: StepBasicInfoProps) => {
     return (
         <div className="space-y-6 animate-fade-in-up">
             <div className="space-y-4">
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-                    성별이 무엇인가요?
-                </label>
+                <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Step 1</p>
+                    <label className="mt-2 block text-sm font-medium text-slate-900">
+                        성별을 선택하세요
+                    </label>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                     {[
-                        { value: 'male', label: '남성', emoji: '🙋‍♂️' },
-                        { value: 'female', label: '여성', emoji: '🙋‍♀️' },
+                        { value: 'male', label: '남성' },
+                        { value: 'female', label: '여성' },
                     ].map((option) => (
                         <Card
                             key={option.value}
                             className={`
-                                flex flex-col items-center justify-center p-6 cursor-pointer border-2 transition-all
+                                flex cursor-pointer flex-col items-center justify-center border p-6 text-center transition-colors
                                 ${data.gender === option.value
-                                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                                    : 'border-transparent hover:border-green-200 dark:hover:border-slate-600'
+                                    ? 'border-black bg-black text-white'
+                                    : 'border-black bg-white text-slate-900'
                                 }
                             `}
                             onClick={() => onChange({ ...data, gender: option.value as Gender })}
                         >
-                            <span className="text-4xl mb-2">{option.emoji}</span>
-                            <span className={`font-medium ${data.gender === option.value ? 'text-green-700 dark:text-green-300' : ''}`}>
-                                {option.label}
-                            </span>
+                            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] opacity-60">Gender</span>
+                            <span className="mt-2 text-base font-semibold">{option.label}</span>
                         </Card>
                     ))}
                 </div>
@@ -55,11 +56,10 @@ const StepBasicInfo = ({ data, onChange, errors }: StepBasicInfoProps) => {
                 )}
             </div>
 
-            {/* Pregnancy/Lactation options for Female */}
             {data.gender === 'female' && (
-                <div className="space-y-3 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg">
-                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                        추가 상태 선택 (해당하는 경우만)
+                <div className="space-y-3 rounded-[20px] border border-black bg-slate-50 p-4">
+                    <p className="text-sm font-medium text-slate-900">
+                        추가 상태
                     </p>
                     <div className="flex flex-col gap-2">
                         <label className="flex items-center space-x-2 cursor-pointer">
@@ -67,18 +67,18 @@ const StepBasicInfo = ({ data, onChange, errors }: StepBasicInfoProps) => {
                                 type="checkbox"
                                 checked={data.is_pregnant || false}
                                 onChange={(e) => onChange({ ...data, is_pregnant: e.target.checked })}
-                                className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                                className="h-4 w-4 rounded border-black text-black focus:ring-black"
                             />
-                            <span className="text-sm text-slate-600 dark:text-slate-400">현재 임신 중입니다</span>
+                            <span className="text-sm text-slate-700">현재 임신 중입니다</span>
                         </label>
                         <label className="flex items-center space-x-2 cursor-pointer">
                             <input
                                 type="checkbox"
                                 checked={data.is_breastfeeding || false}
                                 onChange={(e) => onChange({ ...data, is_breastfeeding: e.target.checked })}
-                                className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                                className="h-4 w-4 rounded border-black text-black focus:ring-black"
                             />
-                            <span className="text-sm text-slate-600 dark:text-slate-400">현재 수유 중입니다</span>
+                            <span className="text-sm text-slate-700">현재 수유 중입니다</span>
                         </label>
                     </div>
                 </div>

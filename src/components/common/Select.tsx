@@ -35,7 +35,7 @@ const Select = ({
     return (
         <div className="w-full">
             {label && (
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                <label className="ui-label mb-2 block">
                     {label}
                 </label>
             )}
@@ -49,17 +49,16 @@ const Select = ({
                             type="button"
                             onClick={() => onChange(option.value)}
                             className={`
-                                relative flex items-center p-4 rounded-xl border-2 transition-all duration-200 text-left w-full
+                                relative flex w-full items-center rounded-[18px] border border-black bg-white p-4 text-left
                                 ${isSelected
-                                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20 shadow-sm'
-                                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-green-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                                    ? 'bg-black text-white'
+                                    : ''
                                 }
                                 ${layout === 'horizontal' ? 'min-w-[120px] justify-center flex-col text-center' : ''}
                             `}
                         >
-                            {/* Check Icon for Selected State */}
                             {isSelected && layout !== 'horizontal' && (
-                                <div className="absolute top-3 right-3 text-green-500">
+                                <div className="absolute top-3 right-3 text-white">
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                                     </svg>
@@ -73,11 +72,11 @@ const Select = ({
                             )}
 
                             <div>
-                                <div className={`font-medium ${isSelected ? 'text-green-800 dark:text-green-300' : 'text-slate-900 dark:text-white'}`}>
+                                <div className={`font-medium ${isSelected ? 'text-white' : 'text-slate-900'}`}>
                                     {option.label}
                                 </div>
                                 {option.description && (
-                                    <div className={`text-xs mt-0.5 ${isSelected ? 'text-green-600 dark:text-green-400' : 'text-slate-500 dark:text-slate-400'}`}>
+                                    <div className={`mt-0.5 text-xs ${isSelected ? 'text-white/80' : 'text-slate-500'}`}>
                                         {option.description}
                                     </div>
                                 )}
@@ -88,7 +87,7 @@ const Select = ({
             </div>
 
             {error && (
-                <p className="mt-1 text-xs text-red-600 dark:text-red-400 animate-fade-in">
+                <p className="ui-error mt-1 animate-fade-in">
                     {error}
                 </p>
             )}

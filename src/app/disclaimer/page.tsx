@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Card, PageShell } from '@/components/common';
 
 export const metadata = {
     title: '면책조항 - MealRo',
@@ -7,13 +8,8 @@ export const metadata = {
 
 export default function DisclaimerPage() {
     return (
-        <div className="max-w-2xl mx-auto px-4 py-8">
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-8">
-                면책조항
-            </h1>
-
-            {/* Medical Disclaimer */}
-            <section className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 mb-6">
+        <PageShell title="면책조항">
+            <Card padding="lg">
                 <h2 className="font-semibold text-lg text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                     <span aria-hidden="true">🏥</span>
                     의료 관련 면책
@@ -40,10 +36,9 @@ export default function DisclaimerPage() {
                         그러한 목적으로 본 서비스를 사용해서는 안 됩니다.
                     </p>
                 </div>
-            </section>
+            </Card>
 
-            {/* Data Accuracy */}
-            <section className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 mb-6">
+            <Card padding="lg">
                 <h2 className="font-semibold text-lg text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                     <span aria-hidden="true">📊</span>
                     데이터 정확성
@@ -66,10 +61,9 @@ export default function DisclaimerPage() {
                         개인의 건강 상태나 영양 목표에 따라 적합하지 않을 수 있습니다.
                     </p>
                 </div>
-            </section>
+            </Card>
 
-            {/* External Links */}
-            <section className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 mb-6">
+            <Card padding="lg">
                 <h2 className="font-semibold text-lg text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                     <span aria-hidden="true">🔗</span>
                     외부 링크 및 제휴
@@ -91,10 +85,9 @@ export default function DisclaimerPage() {
                         MealRo는 외부 링크를 통해 발생하는 거래에 대해 책임지지 않습니다.
                     </p>
                 </div>
-            </section>
+            </Card>
 
-            {/* Privacy */}
-            <section className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 mb-6">
+            <Card padding="lg">
                 <h2 className="font-semibold text-lg text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                     <span aria-hidden="true">🔒</span>
                     개인정보
@@ -114,9 +107,8 @@ export default function DisclaimerPage() {
                         익명 ID는 브라우저의 로컬 스토리지에 저장되며, 언제든지 삭제할 수 있습니다.
                     </p>
                 </div>
-            </section>
+            </Card>
 
-            {/* Back Link */}
             <div className="text-center">
                 <Link
                     href="/"
@@ -125,6 +117,6 @@ export default function DisclaimerPage() {
                     ← 홈으로 돌아가기
                 </Link>
             </div>
-        </div>
+        </PageShell>
     );
 }

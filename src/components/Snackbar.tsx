@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, createContext, useContext, useCallback } from 'react';
+import { Toast, ToastViewport } from '@/components/ui/toast';
 
 interface SnackbarOptions {
     message: string;
@@ -52,35 +53,28 @@ export function SnackbarProvider({ children }: { children: React.ReactNode }) {
 
             {/* Snackbar UI */}
             {snackbar && (
-                <div
-                    role="status"
-                    aria-live="polite"
-                    className={`
-            fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96
-            p-4 bg-slate-800 dark:bg-slate-700 text-white
-            rounded-lg shadow-lg
-            flex items-center justify-between gap-4
-            transition-all duration-300
-            ${isVisible ? 'snackbar-enter' : 'opacity-0 translate-y-full'}
-          `}
-                >
-                    <span className="text-sm">{snackbar.message}</span>
+                <ToastViewport className="left-4 right-4 translate-x-0 md:left-auto md:right-4 md:w-96 md:translate-x-0">
+                    <Toast
+                        className={`
+                            flex items-center justify-between gap-4 transition-all duration-300
+                            ${isVisible ? 'snackbar-enter' : 'opacity-0 translate-y-full'}
+                        `}
+                    >
+                        <span className="text-sm">{snackbar.message}</span>
 
-                    {snackbar.action && (
-                        <button
-                            onClick={() => {
-                                snackbar.action?.onClick();
-                                setIsVisible(false);
-                            }}
-                            className="
-                text-sm font-semibold text-primary-400 hover:text-primary-300
-                transition-colors
-              "
-                        >
-                            {snackbar.action.label}
-                        </button>
-                    )}
-                </div>
+                        {snackbar.action && (
+                            <button
+                                onClick={() => {
+                                    snackbar.action?.onClick();
+                                    setIsVisible(false);
+                                }}
+                                className="text-sm font-semibold text-white/80 transition-colors hover:text-white"
+                            >
+                                {snackbar.action.label}
+                            </button>
+                        )}
+                    </Toast>
+                </ToastViewport>
             )}
         </SnackbarContext.Provider>
     );

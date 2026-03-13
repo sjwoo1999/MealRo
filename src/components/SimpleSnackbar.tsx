@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from 'react';
+import { Toast, ToastViewport } from '@/components/ui/toast';
 
 interface SimpleSnackbarProps {
     isVisible: boolean;
@@ -22,10 +23,10 @@ export default function SimpleSnackbar({ isVisible, message, onClose, duration =
     if (!isVisible) return null;
 
     return (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
-            <div className="bg-slate-800 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 animate-fade-in-up">
+        <ToastViewport>
+            <Toast className="animate-fade-in-up">
                 <span>{message}</span>
-            </div>
-        </div>
+            </Toast>
+        </ToastViewport>
     );
 }

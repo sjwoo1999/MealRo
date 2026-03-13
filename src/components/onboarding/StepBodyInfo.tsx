@@ -12,6 +12,11 @@ interface StepBodyInfoProps {
 const StepBodyInfo = ({ data, onChange, errors }: StepBodyInfoProps) => {
     return (
         <div className="space-y-6 animate-fade-in-up">
+            <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Step 2</p>
+                <p className="mt-2 text-sm font-medium text-slate-900">기본 신체 정보를 입력하세요</p>
+            </div>
+
             <div className="space-y-1">
                 <Input
                     label="키는 몇 cm인가요?"
@@ -37,12 +42,12 @@ const StepBodyInfo = ({ data, onChange, errors }: StepBodyInfoProps) => {
                 />
             </div>
 
-            <div className="space-y-1 pt-4 border-t border-slate-100 dark:border-slate-800">
-                <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            <div className="space-y-1 border-t border-black pt-4">
+                <div className="mb-2 flex items-center justify-between">
+                    <label className="block text-sm font-medium text-slate-900">
                         제지방량 (선택사항)
                     </label>
-                    <span className="text-xs text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">InBody 데이터</span>
+                    <span className="rounded-full border border-black px-2 py-1 text-xs text-slate-500">선택</span>
                 </div>
                 <Input
                     type="number"
@@ -51,7 +56,7 @@ const StepBodyInfo = ({ data, onChange, errors }: StepBodyInfoProps) => {
                     placeholder="InBody 결과의 제지방량 입력"
                     suffix="kg"
                     error={errors?.ffm}
-                    hint="입력 시 더 정확한 기초대사량이 계산됩니다."
+                    hint="있으면 더 정확하게 계산됩니다."
                 />
             </div>
         </div>

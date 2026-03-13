@@ -1,56 +1,105 @@
 
 'use client';
 
-import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { Camera } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import Button from '@/components/common/Button';
+import { PRIMARY_NAV_ITEMS, isActivePath, isShellHiddenPath } from './navigation';
 
 export default function Header() {
     const { user, isLoading, logout } = useAuth();
+    const pathname = usePathname();
+
+    if (isShellHiddenPath(pathname)) {
+        return null;
+    }
+
+    const desktopItems = PRIMARY_NAV_ITEMS.filter((item) => item.showInDesktop);
 
     return (
-        <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 transition-colors">
-            <div className="max-w-2xl lg:max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-                <div className="flex items-center gap-8">
+        <header
+            className="sticky top-0 z-50 border-b bg-white transition-colors"
+            style={{
+                borderColor: '#111111',
+            }}
+        >
+            <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 lg:px-6">
+                <div className="flex min-w-0 items-center gap-4 lg:gap-8">
                     <Link
                         href="/"
-                        className="flex items-center gap-2 text-xl font-bold text-green-600 dark:text-green-400 hover:opacity-80 transition-opacity"
+                        className="flex min-w-0 items-center gap-3 rounded-2xl px-1 py-1"
                     >
-                        <span aria-hidden="true">🍽️</span>
-                        <span>MealRo</span>
+                        <span
+                            aria-hidden="true"
+                            className="flex h-10 w-10 items-center justify-center rounded-[16px] border border-black bg-white text-lg"
+                        >
+                            🍽️
+                        </span>
+                        <span className="min-w-0">
+                            <span className="block truncate text-lg font-bold tracking-tight text-slate-900">
+                                MealRo
+                            </span>
+                        </span>
                     </Link>
 
-                    {/* Desktop Navigation */}
-                    <nav className="hidden lg:flex items-center gap-6">
-                        <Link href="/" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">홈</Link>
-                        <Link href="/insights" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">분석</Link>
-                        <Link href="/feed" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">피드</Link>
-                        <Link href="/mypage" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">마이페이지</Link>
+                    <nav className="hidden items-center gap-2 lg:flex">
+                        {desktopItems.map((item) => {
+                            const isActive = isActivePath(pathname, item);
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className={`rounded-full px-4 py-2 text-sm font-medium ${
+                                        isActive ? 'bg-[#f7f7f7] text-slate-900' : 'text-slate-600 hover:text-slate-900'
+                                    }`}
+                                >
+                                    {item.label}
+                                </Link>
+                            );
+                        })}
                     </nav>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex shrink-0 items-center gap-2 lg:gap-3">
+                    <Link
+                        href="/scan"
+                        className="hidden items-center gap-2 rounded-full border border-black bg-black px-4 py-2 text-sm font-semibold text-white lg:inline-flex"
+                    >
+                        <Camera className="h-4 w-4" />
+                        기록하기
+                    </Link>
+
                     {!isLoading && (
                         user ? (
                             <div className="flex items-center gap-2">
-                                <span className="text-sm text-gray-600 dark:text-gray-300 font-medium">
+                                <div
+                                    className="hidden rounded-full border border-black px-3 py-1.5 text-sm font-medium text-slate-600 md:block"
+                                >
                                     {user.email?.split('@')[0]}
-                                </span>
-                                <button
+                                </div>
+                                <Button
                                     onClick={logout}
-                                    className="p-1.5 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="rounded-full px-3"
                                     aria-label="로그아웃"
                                 >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                                </button>
+                                    로그아웃
+                                </Button>
                             </div>
                         ) : (
-                            <Link
-                                href="/auth?mode=login"
-                                className="text-sm font-semibold text-gray-500 hover:text-green-600 transition-colors bg-gray-100 hover:bg-green-50 px-3 py-1.5 rounded-lg"
-                            >
-                                로그인
-                            </Link>
+                            <>
+                                <Link href="/auth?mode=login" className="hidden md:block">
+                                    <Button variant="ghost" size="sm">로그인</Button>
+                                </Link>
+                                <Link href="/auth?mode=signup">
+                                    <Button size="sm" className="rounded-full px-4">
+                                        가입하기
+                                    </Button>
+                                </Link>
+                            </>
                         )
                     )}
                 </div>

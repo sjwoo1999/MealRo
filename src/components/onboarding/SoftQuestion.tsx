@@ -6,17 +6,18 @@ interface SoftQuestionProps {
 
 export default function SoftQuestion({ onNext }: SoftQuestionProps) {
     const options = [
-        { id: 'diet', label: '체중 감량 (다이어트)', icon: '🥗' },
-        { id: 'muscle', label: '근육량 증가 (벌크업)', icon: '💪' },
-        { id: 'health', label: '건강 관리', icon: '❤️' },
+        { id: 'diet', label: '체중 감량' },
+        { id: 'muscle', label: '근육량 증가' },
+        { id: 'health', label: '건강 관리' },
     ];
 
     return (
-        <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-900 p-6">
-            <div className="flex-1 flex flex-col justify-center space-y-8">
+        <div className="flex min-h-screen flex-col bg-white p-6">
+            <div className="flex flex-1 flex-col justify-center space-y-8">
                 <div>
-                    <h2 className="text-2xl font-bold mb-2">어떤 목표를<br />가지고 계신가요?</h2>
-                    <p className="text-slate-500">가장 중요한 목표 하나를 선택해주세요.</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Quick Setup</p>
+                    <h2 className="mt-2 text-2xl font-bold">가장 중요한 목표를 고르세요</h2>
+                    <p className="mt-2 text-slate-500">하나만 선택해도 충분합니다.</p>
                 </div>
 
                 <div className="space-y-4">
@@ -24,22 +25,22 @@ export default function SoftQuestion({ onNext }: SoftQuestionProps) {
                         <button
                             key={option.id}
                             onClick={() => onNext(option.id)}
-                            className="w-full p-5 bg-white dark:bg-slate-800 rounded-2xl shadow-sm hover:shadow-md transition-all flex items-center gap-4 text-left border border-transparent hover:border-emerald-500"
+                            className="flex w-full items-center gap-4 rounded-[24px] border border-black bg-white p-5 text-left transition-colors hover:bg-slate-50"
                         >
-                            <span className="text-2xl">{option.icon}</span>
+                            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Goal</span>
                             <span className="font-bold text-lg">{option.label}</span>
                         </button>
                     ))}
                 </div>
             </div>
 
-            <div className="text-center">
-                <button
+            <div className="border-t border-black pt-6 text-center">
+                <Button
+                    variant="ghost"
                     onClick={() => onNext()}
-                    className="text-slate-400 hover:text-slate-600 font-medium text-sm"
                 >
                     나중에 선택할게요
-                </button>
+                </Button>
             </div>
         </div>
     );

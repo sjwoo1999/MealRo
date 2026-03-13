@@ -124,13 +124,13 @@ const OnboardingForm = ({ onComplete, prefilledGoal }: OnboardingFormProps) => {
         if (step === 'complete') return null;
 
         return (
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center max-w-md mx-auto w-full md:relative md:border-none md:p-0 md:mt-8">
+            <div className="fixed bottom-0 left-0 right-0 z-20 mx-auto flex w-full max-w-md items-center justify-between border-t border-black bg-white px-4 pb-[calc(16px+env(safe-area-inset-bottom))] pt-4 md:relative md:mt-8 md:border-none md:px-0 md:pb-0 md:pt-0">
                 {step > 1 ? (
-                    <Button variant="ghost" onClick={handleBack} disabled={isSubmitting}>
+                    <Button variant="outline" onClick={handleBack} disabled={isSubmitting}>
                         이전
                     </Button>
                 ) : (
-                    <div></div> // Spacer
+                    <div />
                 )}
 
                 <Button onClick={handleNext} disabled={isSubmitting} className="min-w-[120px]">
@@ -174,7 +174,11 @@ const OnboardingForm = ({ onComplete, prefilledGoal }: OnboardingFormProps) => {
     };
 
     return (
-        <div className="w-full max-w-md mx-auto p-4 pb-24 md:pb-4">
+        <div className="mx-auto w-full max-w-md px-4 pb-28 pt-6 md:pb-6">
+            <div className="mb-6">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Onboarding</p>
+                <h1 className="mt-2 text-2xl font-semibold text-slate-900">기본 정보만 먼저 입력하세요</h1>
+            </div>
             {typeof step === 'number' && (
                 <StepIndicator currentStep={step} totalSteps={4} />
             )}

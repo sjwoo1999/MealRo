@@ -25,16 +25,14 @@ const Card = ({
     };
 
     const hoverClass = hover
-        ? 'hover:shadow-md hover:border-green-200 dark:hover:border-slate-600 cursor-pointer transition-all duration-200'
+        ? 'ui-card-hover cursor-pointer'
         : '';
 
     return (
         <div
             onClick={onClick}
             className={`
-                bg-white dark:bg-slate-800 
-                border border-slate-200 dark:border-slate-700 
-                rounded-xl shadow-sm 
+                ui-card
                 ${paddingClasses[padding]} 
                 ${hoverClass}
                 ${className}

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Card, PageShell } from '@/components/common';
 
 export const metadata = {
     title: '소개 - MealRo',
@@ -7,13 +8,8 @@ export const metadata = {
 
 export default function AboutPage() {
     return (
-        <div className="max-w-2xl mx-auto px-4 py-8">
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-8">
-                MealRo 소개
-            </h1>
-
-            {/* Main Intro */}
-            <section className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 mb-6">
+        <PageShell title="MealRo 소개">
+            <Card padding="lg">
                 <div className="text-center mb-6">
                     <span className="text-6xl" aria-hidden="true">🍽️</span>
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white mt-4">
@@ -30,10 +26,9 @@ export default function AboutPage() {
                         &ldquo;뭐 먹지?&rdquo; 고민하는 순간, 영양 정보를 기반으로 더 나은 선택을 도와드립니다.
                     </p>
                 </div>
-            </section>
+            </Card>
 
-            {/* How It Works */}
-            <section className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 mb-6">
+            <Card padding="lg">
                 <h2 className="font-semibold text-lg text-slate-900 dark:text-white mb-4">
                     이용 방법
                 </h2>
@@ -75,10 +70,9 @@ export default function AboutPage() {
                         </div>
                     </li>
                 </ol>
-            </section>
+            </Card>
 
-            {/* Grade System */}
-            <section className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 mb-6">
+            <Card padding="lg">
                 <h2 className="font-semibold text-lg text-slate-900 dark:text-white mb-4">
                     등급 시스템
                 </h2>
@@ -118,10 +112,9 @@ export default function AboutPage() {
                     {/* TODO(LEGAL_REVIEW): 등급 기준 설명 정확성 확인 필요 */}
                     * 등급은 참고 지표이며, 개인의 건강 상태에 따라 적합하지 않을 수 있습니다.
                 </p>
-            </section>
+            </Card>
 
-            {/* Contact */}
-            <section className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 mb-6">
+            <Card padding="lg">
                 <h2 className="font-semibold text-lg text-slate-900 dark:text-white mb-4">
                     문의
                 </h2>
@@ -136,9 +129,8 @@ export default function AboutPage() {
                 >
                     contact@mealro.app
                 </a>
-            </section>
+            </Card>
 
-            {/* Back Link */}
             <div className="text-center">
                 <Link
                     href="/"
@@ -147,7 +139,7 @@ export default function AboutPage() {
                     ← 홈으로 돌아가기
                 </Link>
             </div>
-        </div>
+        </PageShell>
     );
 }
 

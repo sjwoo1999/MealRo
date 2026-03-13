@@ -22,17 +22,33 @@ const config: Config = {
                 '16': '4rem',     // 64px
             },
             colors: {
+                bg: 'var(--color-bg)',
+                'bg-elevated': 'var(--color-bg-elevated)',
+                surface: 'var(--color-surface)',
+                'surface-muted': 'var(--color-surface-muted)',
+                line: 'var(--color-border)',
+                'line-strong': 'var(--color-border-strong)',
+                copy: 'var(--color-text)',
+                'copy-muted': 'var(--color-text-muted)',
+                'copy-subtle': 'var(--color-text-subtle)',
+                accent: 'var(--color-accent)',
+                'accent-hover': 'var(--color-accent-hover)',
+                'accent-soft': 'var(--color-accent-soft)',
+                'accent-ring': 'var(--color-accent-ring)',
+                danger: 'var(--color-danger)',
+                'danger-soft': 'var(--color-danger-soft)',
+                // keep primary for backwards compatibility temporarily
                 primary: {
-                    50: '#f0fdf4',
-                    100: '#dcfce7',
-                    200: '#bbf7d0',
-                    300: '#86efac',
-                    400: '#4ade80',
-                    500: '#22c55e',
-                    600: '#16a34a',
-                    700: '#15803d',
-                    800: '#166534',
-                    900: '#14532d',
+                    50: '#f3f6f1',
+                    100: '#e5ece1',
+                    200: '#ccd8c6',
+                    300: '#adbdab',
+                    400: '#859984',
+                    500: '#546f52',
+                    600: '#425943',
+                    700: '#334639',
+                    800: '#2a392f',
+                    900: '#23302a',
                 },
                 grade: {
                     a: '#22c55e',  // green
@@ -44,6 +60,17 @@ const config: Config = {
             fontFamily: {
                 sans: ['Pretendard', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'Roboto', 'sans-serif'],
             },
+            borderRadius: {
+                sm: 'var(--radius-sm)',
+                md: 'var(--radius-md)',
+                lg: 'var(--radius-lg)',
+                pill: 'var(--radius-pill)',
+            },
+            boxShadow: {
+                xs: 'var(--shadow-xs)',
+                sm: 'var(--shadow-sm)',
+                md: 'var(--shadow-md)',
+            }
         },
     },
     plugins: [],
