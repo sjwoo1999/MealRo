@@ -206,6 +206,19 @@ export default function BetaFeedPage({
                                 ? '이 기기 기록'
                                 : meal.notes?.startsWith('planner:') ? '추천 저장' : '사진 기록';
 
+                            if (mode === 'history') {
+                                return (
+                                    <CompactHistoryCard
+                                        key={meal.id}
+                                        meal={meal}
+                                        primaryFood={primaryFood}
+                                        extraCount={extraCount}
+                                        mealType={mealType}
+                                        isLocal={isLocalCachedMeal}
+                                    />
+                                );
+                            }
+
                             return (
                                 <Card key={meal.id} padding="lg" className="border border-black shadow-none">
                                     <div className="flex items-start gap-4">
@@ -229,11 +242,11 @@ export default function BetaFeedPage({
                                                         <span className="rounded-full border border-black bg-black px-2.5 py-1 text-[11px] font-semibold text-white">
                                                             방금 저장
                                                         </span>
-                                                    ) : mode === 'feed' ? (
+                                                    ) : (
                                                         <span className="rounded-full border border-black bg-[#f7f7f7] px-2.5 py-1 text-[11px] font-semibold text-slate-700">
                                                             {meal.beta_name || '테스터'}
                                                         </span>
-                                                    ) : null}
+                                                    )}
                                                     {mealType && (
                                                         <span className="rounded-full border border-black bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700">
                                                             {mealType}
@@ -273,7 +286,7 @@ export default function BetaFeedPage({
                                         ) : (
                                             <Link href={`/history/${meal.id}`}>
                                                 <Button variant="outline" size="sm" className="border-black bg-white">
-                                                    {mode === 'feed' ? '자세히 보기' : '기록 보기'}
+                                                    자세히 보기
                                                 </Button>
                                             </Link>
                                         )}
@@ -364,6 +377,71 @@ function inferMealTypeFromDate(date: Date): string {
     if (hour >= 11 && hour < 15) return 'lunch';
     if (hour >= 15 && hour < 21) return 'dinner';
     return 'snack';
+}
+
+const MEAL_TYPE_EMOJI: Record<string, string> = {
+    breakfast: '🌅',
+    lunch: '☀️',
+    dinner: '🌙',
+    snack: '🍎',
+};
+
+function CompactHistoryCard({
+    meal,
+    primaryFood,
+    extraCount,
+    mealType,
+    isLocal,
+}: {
+    meal: FeedMeal;
+    primaryFood: string;
+    extraCount: number;
+    mealType: string | null;
+    isLocal: boolean;
+}) {
+    const time = new Date(meal.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+    const foodLabel = extraCount > 0 ? `${primaryFood} 외 ${extraCount}개` : primaryFood;
+
+    return (
+        <div className="flex items-center gap-3 rounded-[18px] border border-black bg-white px-4 py-3">
+            {meal.image_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                    src={meal.image_url}
+                    alt={primaryFood}
+                    className="h-10 w-10 shrink-0 rounded-[10px] border border-black object-cover"
+                />
+            ) : (
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] border border-black bg-slate-50 text-lg">
+                    {MEAL_TYPE_EMOJI[meal.meal_type || ''] || '🍽️'}
+                </div>
+            )}
+
+            <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-sm font-semibold text-slate-900">{foodLabel}</p>
+                    <p className="shrink-0 text-sm font-semibold text-slate-900">
+                        {Math.round(meal.total_calories || 0)} kcal
+                    </p>
+                </div>
+                <p className="mt-0.5 text-xs text-slate-500">
+                    탄수 {Math.round(meal.total_carbs || 0)}g · 단백 {Math.round(meal.total_protein || 0)}g · 지방 {Math.round(meal.total_fat || 0)}g
+                </p>
+                <div className="mt-1 flex items-center justify-between">
+                    <p className="text-xs text-slate-400">
+                        {mealType && `${mealType} · `}{time}
+                    </p>
+                    {isLocal ? (
+                        <span className="text-xs text-slate-400">반영 중</span>
+                    ) : (
+                        <Link href={`/history/${meal.id}`} className="text-xs font-medium text-slate-700 hover:underline">
+                            →
+                        </Link>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
 }
 
 function MiniStat({
