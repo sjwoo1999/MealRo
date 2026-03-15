@@ -8,8 +8,9 @@ export type NavigationItem = {
 
 export const PRIMARY_NAV_ITEMS: NavigationItem[] = [
     { href: '/', label: '홈', match: 'exact', showInDesktop: true },
-    { href: '/scan', label: '스캔', match: 'prefix', showInDesktop: false },
-    { href: '/feed', label: '피드', match: 'prefix', showInDesktop: true },
+    { href: '/insights', label: '분석', match: 'prefix', showInDesktop: true },
+    { href: '/scan', label: '기록', match: 'prefix', showInDesktop: false },
+    { href: '/meal', label: '추천', match: 'prefix', showInDesktop: true },
     { href: '/mypage', label: '마이', mobileLabel: '마이', match: 'prefix', showInDesktop: true },
 ];
 

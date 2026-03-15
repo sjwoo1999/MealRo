@@ -20,10 +20,7 @@ export default function Header() {
 
     return (
         <header
-            className="sticky top-0 z-50 border-b bg-white transition-colors"
-            style={{
-                borderColor: '#111111',
-            }}
+            className="sticky top-0 z-50 border-b border-black bg-white transition-colors"
         >
             <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 lg:px-6">
                 <div className="flex min-w-0 items-center gap-4 lg:gap-8">
@@ -52,7 +49,7 @@ export default function Header() {
                                     key={item.href}
                                     href={item.href}
                                     className={`rounded-full px-4 py-2 text-sm font-medium ${
-                                        isActive ? 'bg-[#f7f7f7] text-slate-900' : 'text-slate-600 hover:text-slate-900'
+                                        isActive ? 'bg-neutral-100 text-slate-900' : 'text-slate-600 hover:text-slate-900'
                                     }`}
                                 >
                                     {item.label}
