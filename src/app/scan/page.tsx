@@ -30,20 +30,20 @@ export default function ScanPage({ searchParams }: ScanPageProps) {
 
                 <section className="grid gap-6 lg:grid-cols-[0.36fr_0.64fr]">
                     <Card padding="lg" className="shadow-sm border-line">
-                        <h1 className="mt-3 text-2xl font-semibold text-copy">
+                        <h1 className="mt-3 text-lg font-semibold text-copy">
                             {activeMeal ? `${activeMeal.label} 식사 기록` : '식사 시간을 먼저 고르세요'}
                         </h1>
 
-                        <div className="mt-4 grid grid-cols-2 gap-3">
+                        <div className="mt-4 flex gap-2">
                             {Object.entries(MEAL_CONTEXT).map(([key, value]) => {
                                 const active = key === mealKey;
                                 return (
                                     <Link
                                         key={key}
                                         href={`/scan?meal=${key}`}
-                                        className={`rounded-2xl border p-4 text-left transition-colors hover:border-accent ${active ? 'bg-accent text-white border-accent shadow-md' : 'bg-surface text-copy border-line-strong hover:bg-surface-muted'}`}
+                                        className={`flex-1 rounded-xl border py-2 text-center text-sm font-semibold transition-colors ${active ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white' : 'border-slate-200 text-slate-600 hover:border-black hover:text-slate-900 dark:border-slate-700 dark:text-slate-400 dark:hover:border-white dark:hover:text-white'}`}
                                     >
-                                        <p className="text-sm font-semibold">{value.label}</p>
+                                        {value.label}
                                     </Link>
                                 );
                             })}

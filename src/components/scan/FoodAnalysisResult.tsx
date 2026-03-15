@@ -48,6 +48,7 @@ export default function FoodAnalysisResult({
     const [foods, setFoods] = useState<VisualFoodData[]>(() => normalizeFoods(data));
     const [selectedFoodId, setSelectedFoodId] = useState<string | null>(null);
     const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number } | undefined>(undefined);
+    const [currentFoodIndex, setCurrentFoodIndex] = useState(0);
 
     const totals = foods.reduce((acc, food) => ({
         calories: acc.calories + Math.round(food.nutrition.calories),
@@ -188,8 +189,30 @@ export default function FoodAnalysisResult({
                             </button>
                         </div>
 
+                        {foods.length > 1 && (
+                            <div className="mt-3 flex items-center justify-between text-sm text-slate-500">
+                                <button
+                                    type="button"
+                                    onClick={() => setCurrentFoodIndex((i) => Math.max(0, i - 1))}
+                                    disabled={currentFoodIndex === 0}
+                                    className="px-2 py-1 rounded disabled:opacity-30 hover:text-slate-900 transition-colors"
+                                >
+                                    ←
+                                </button>
+                                <span className="font-medium">{currentFoodIndex + 1} / {foods.length}</span>
+                                <button
+                                    type="button"
+                                    onClick={() => setCurrentFoodIndex((i) => Math.min(foods.length - 1, i + 1))}
+                                    disabled={currentFoodIndex === foods.length - 1}
+                                    className="px-2 py-1 rounded disabled:opacity-30 hover:text-slate-900 transition-colors"
+                                >
+                                    →
+                                </button>
+                            </div>
+                        )}
+
                         <div className="mt-4 space-y-3">
-                            {foods.map((food) => (
+                            {(foods.length > 1 ? [foods[currentFoodIndex]] : foods).map((food) => (
                                 <button
                                     key={food.id}
                                     type="button"
@@ -218,11 +241,10 @@ export default function FoodAnalysisResult({
                     <div className="space-y-4">
                         <Card padding="lg" className="border border-black shadow-none">
                             <h4 className="text-base font-semibold text-slate-900">영양 요약</h4>
-                            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                            <div className="mt-4 grid grid-cols-2 gap-3">
                                 <MetricCard label="탄수화물" value={`${Math.round(totals.carbohydrates)} g`} compact />
                                 <MetricCard label="단백질" value={`${Math.round(totals.protein)} g`} compact />
-                                <MetricCard label="지방" value={`${Math.round(totals.fat)} g`} compact />
-                                <MetricCard label="기록 상태" value="준비 완료" compact />
+                                <MetricCard label="지방" value={`${Math.round(totals.fat)} g`} compact className="col-span-2" />
                             </div>
                         </Card>
                     </div>
@@ -276,13 +298,15 @@ function MetricCard({
     label,
     value,
     compact = false,
+    className,
 }: {
     label: string;
     value: string;
     compact?: boolean;
+    className?: string;
 }) {
     return (
-        <div className={compact ? 'rounded-[18px] border border-black bg-[#f7f7f7] p-4' : 'rounded-[20px] border border-black bg-[#f7f7f7] p-4'}>
+        <div className={`${compact ? 'rounded-[18px]' : 'rounded-[20px]'} border border-black bg-[#f7f7f7] p-4${className ? ` ${className}` : ''}`}>
             <p className="text-sm text-slate-500">{label}</p>
             <p className="mt-2 text-lg font-semibold text-slate-900">{value}</p>
         </div>

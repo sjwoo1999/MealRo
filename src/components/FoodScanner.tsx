@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Camera, CheckCircle2, RotateCcw } from 'lucide-react';
 import { FoodData, FoodAnalysisResponse, needsVerification, hasMultipleFoods } from '@/types/food';
 import { getAnonymousUserId } from '@/lib/userId';
@@ -345,17 +345,19 @@ export default function FoodScanner({
         }
     };
 
-    const progressTitle = isSaving
-        ? '기록을 저장하고 있어요'
-        : isCompressing
-            ? '사진을 분석하기 좋게 정리하고 있어요'
-            : 'AI가 음식과 영양 정보를 계산하고 있어요';
+    const ANALYZING_MESSAGES = [
+        '음식을 살펴보고 있어요',
+        '칼로리를 계산하고 있어요',
+        '영양 정보를 정리하고 있어요',
+        '거의 다 됐어요!',
+    ];
+    const typingText = useTypingText(ANALYZING_MESSAGES, isAnalyzing);
 
-    const progressDescription = isSaving
-        ? '저장 중입니다.'
+    const progressTitle = isSaving
+        ? '잠깐만요, 기록을 저장하고 있어요'
         : isCompressing
-            ? '이미지 준비 중입니다.'
-            : '분석 중입니다.';
+            ? '사진을 준비하고 있어요'
+            : '';
 
     return (
         <div className="w-full space-y-4">
@@ -415,48 +417,10 @@ export default function FoodScanner({
                         <img
                             src={previewUrl}
                             alt="음식 사진 미리보기"
-                            className="w-full max-h-64 object-contain"
+                            className={`w-full max-h-80 object-contain transition-opacity duration-300 ${
+                                isCompressing || isAnalyzing || isSaving ? 'opacity-30' : 'opacity-100'
+                            }`}
                         />
-
-                        {/* Compressing/Analyzing/Saving Overlay */}
-                        {(isCompressing || isAnalyzing || isSaving) && (
-                            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/94 p-4 dark:bg-black/88">
-                                <div
-                                    className="w-full max-w-md rounded-[24px] border border-black bg-white p-6 shadow-none"
-                                    style={{
-                                        backgroundColor: 'rgba(255,255,255,0.96)',
-                                    }}
-                                >
-                                    <div className="inline-flex rounded-full border border-black px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
-                                        {isSaving ? 'SAVE' : isCompressing ? 'PREP' : 'ANALYSIS'}
-                                    </div>
-                                    <h3 className="mt-4 text-xl font-semibold text-slate-900">
-                                        {progressTitle}
-                                    </h3>
-                                    <p className="mt-2 text-sm text-slate-600">
-                                        {progressDescription}
-                                    </p>
-
-                                    <div className="mt-5 space-y-3">
-                                        <ProgressChecklistItem
-                                            title="이미지 준비"
-                                            description="압축 및 업로드용 전처리"
-                                            status={isCompressing ? 'current' : previewUrl ? 'done' : 'pending'}
-                                        />
-                                        <ProgressChecklistItem
-                                            title="음식 분석"
-                                            description="음식명과 영양 정보 추정"
-                                            status={isAnalyzing ? 'current' : analyzedData ? 'done' : (isSaving ? 'done' : 'pending')}
-                                        />
-                                        <ProgressChecklistItem
-                                            title="기록 저장"
-                                            description="기록을 남기고 목록에 반영"
-                                            status={isSaving ? 'current' : didPersist ? 'done' : 'pending'}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
 
                         {/* Compression Info Badge */}
                         {compressionInfo && !isCompressing && !isAnalyzing && !isSaving && (
@@ -465,6 +429,41 @@ export default function FoodScanner({
                             </div>
                         )}
                     </div>
+
+                    {/* Compressing/Analyzing/Saving Progress Card */}
+                    {(isCompressing || isAnalyzing || isSaving) && (
+                        <div className="rounded-[24px] border border-black bg-white p-6">
+                            <div className="inline-flex rounded-full border border-black px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">
+                                {isSaving ? 'SAVE' : isCompressing ? 'PREP' : 'ANALYSIS'}
+                            </div>
+                            <h3 className="mt-4 text-xl font-semibold text-slate-900">
+                                {isAnalyzing ? (
+                                    <span>
+                                        {typingText}
+                                        <span className="animate-pulse">|</span>
+                                    </span>
+                                ) : progressTitle}
+                            </h3>
+
+                            <div className="mt-5 space-y-3">
+                                <ProgressChecklistItem
+                                    title="이미지 준비"
+                                    description="사진을 분석에 맞게 준비해요"
+                                    status={isCompressing ? 'current' : previewUrl ? 'done' : 'pending'}
+                                />
+                                <ProgressChecklistItem
+                                    title="음식 분석"
+                                    description="AI가 음식과 영양 정보를 살펴봐요"
+                                    status={isAnalyzing ? 'current' : analyzedData ? 'done' : (isSaving ? 'done' : 'pending')}
+                                />
+                                <ProgressChecklistItem
+                                    title="기록 저장"
+                                    description="결과를 저장하고 목록에 반영해요"
+                                    status={isSaving ? 'current' : didPersist ? 'done' : 'pending'}
+                                />
+                            </div>
+                        </div>
+                    )}
 
                     {/* Error State */}
                     {error && (
@@ -487,7 +486,7 @@ export default function FoodScanner({
                             candidates={analyzedData.candidates}
                             onSelect={handleCandidateSelect}
                             onManualInput={() => {
-                                alert('아래 결과 카드의 ✏️ 버튼을 눌러 직접 수정할 수 있습니다.');
+                                setMessage('아래 결과 카드의 ✏️ 버튼을 눌러 직접 수정할 수 있습니다.');
                             }}
                         />
                     )}
@@ -507,85 +506,71 @@ export default function FoodScanner({
                                 onRetake={resetScanner}
                             />
 
-                            {/* Confirmation Options */}
-                            <div className="space-y-1">
-                                <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200 cursor-pointer select-none">
-                                    <input
-                                        type="checkbox"
-                                        checked={isPublic}
-                                        onChange={(e) => setIsPublic(e.target.checked)}
-                                        className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
-                                    />
-                                    <span>익명 집계에 포함</span>
-                                </label>
-                            </div>
-
-                            <Card padding="lg" className="border border-black shadow-none">
-                                <h3 className="text-base font-semibold text-slate-900 dark:text-white">
-                                    {didPersist ? '이제 여기서 끝내거나 다음으로 넘어가면 됩니다' : '저장 후 확인'}
-                                </h3>
-
-                                {didPersist && (
-                                    <>
-                                        <SuccessStateCard
-                                            tone={saveState === 'success' ? 'success' : 'muted'}
-                                            title={saveState === 'success' ? '기록이 저장되었습니다' : '이 기기에 기록을 남겼습니다'}
-                                            description={saveState === 'success'
-                                                ? '기록은 저장되었습니다. 지금은 기록 확인이나 다시 기록만 해도 충분합니다.'
-                                                : '인터넷 상태에 따라 전체 목록 반영이 늦을 수 있어, 우선 이 기기에 기록을 남겨뒀습니다.'}
+                            {/* Confirmation Options — only before saving */}
+                            {!didPersist && (
+                                <div className="space-y-1">
+                                    <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200 cursor-pointer select-none">
+                                        <input
+                                            type="checkbox"
+                                            checked={isPublic}
+                                            onChange={(e) => setIsPublic(e.target.checked)}
+                                            className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                                         />
-                                        {saveDiagnostic && (
-                                            <div className="mt-3">
-                                                <DiagnosticCard
-                                                    label="저장 상태"
-                                                    tone={saveState === 'success' ? 'info' : 'warning'}
-                                                    title={saveState === 'success' ? '전체 목록 반영 안내' : '저장 안내'}
-                                                    description={saveDiagnostic}
-                                                />
-                                            </div>
-                                        )}
-                                    </>
-                                )}
+                                        <span>익명 집계에 포함</span>
+                                    </label>
+                                </div>
+                            )}
 
-                                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                                    <Link href="/history" className="block">
+                            {/* Post-save card — only after saving */}
+                            {didPersist && (
+                                <Card padding="lg" className="border border-black shadow-none">
+                                    <SuccessStateCard
+                                        tone={saveState === 'success' ? 'success' : 'muted'}
+                                        title={saveState === 'success' ? '기록이 저장되었습니다' : '이 기기에 기록을 남겼습니다'}
+                                        description={saveState === 'success'
+                                            ? '기록은 저장되었습니다. 지금은 기록 확인이나 다시 기록만 해도 충분합니다.'
+                                            : '인터넷 상태에 따라 전체 목록 반영이 늦을 수 있어, 우선 이 기기에 기록을 남겨뒀습니다.'}
+                                    />
+                                    {saveDiagnostic && saveState !== 'success' && (
+                                        <div className="mt-3">
+                                            <DiagnosticCard
+                                                label="저장 상태"
+                                                tone="warning"
+                                                title="저장 안내"
+                                                description={saveDiagnostic}
+                                            />
+                                        </div>
+                                    )}
+
+                                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                                        <Link href="/history" className="block">
+                                            <Button
+                                                size="lg"
+                                                fullWidth
+                                                className="w-full border border-black bg-black text-white shadow-none"
+                                            >
+                                                보관함 보기
+                                            </Button>
+                                        </Link>
                                         <Button
+                                            variant="outline"
                                             size="lg"
                                             fullWidth
-                                            className="w-full border border-black bg-black text-white shadow-none"
+                                            onClick={resetScanner}
+                                            className="w-full border-black bg-white shadow-none"
+                                            leftIcon={<RotateCcw className="h-4 w-4" />}
                                         >
-                                            보관함 보기
+                                            다시 기록
                                         </Button>
-                                    </Link>
-                                    <Button
-                                        variant="outline"
-                                        size="lg"
-                                        fullWidth
-                                        onClick={resetScanner}
-                                        className="w-full border-black bg-white shadow-none"
-                                        leftIcon={<RotateCcw className="h-4 w-4" />}
-                                    >
-                                        다시 기록
-                                    </Button>
-                                </div>
-                                <div className="mt-3">
-                                    <Link href="/meal" className="text-sm font-medium text-slate-600 underline-offset-4 hover:underline">
-                                        추천이 필요하면 다음 식사 추천 보기
-                                    </Link>
-                                </div>
-                            </Card>
-
+                                    </div>
+                                    <div className="mt-3">
+                                        <Link href="/meal" className="text-sm font-medium text-slate-600 underline-offset-4 hover:underline">
+                                            추천이 필요하면 다음 식사 추천 보기
+                                        </Link>
+                                    </div>
+                                </Card>
+                            )}
                         </>
-                    )}
-
-                    {!didPersist && (
-                        <button
-                            onClick={resetScanner}
-                            disabled={isSaving}
-                            className="w-full rounded-xl border-2 border-slate-300 py-3 font-medium text-slate-700 transition-colors hover:bg-slate-100 disabled:opacity-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
-                        >
-                            다른 사진 분석하기
-                        </button>
                     )}
                 </div>
             )
@@ -599,6 +584,59 @@ export default function FoodScanner({
             />
         </div >
     );
+}
+
+function useTypingText(messages: string[], active: boolean): string {
+    const [displayText, setDisplayText] = useState('');
+    const [msgIdx, setMsgIdx] = useState(0);
+    const [charIdx, setCharIdx] = useState(0);
+    const [erasing, setErasing] = useState(false);
+    const [waiting, setWaiting] = useState(false);
+
+    useEffect(() => {
+        if (!active) {
+            setDisplayText('');
+            setMsgIdx(0);
+            setCharIdx(0);
+            setErasing(false);
+            setWaiting(false);
+            return;
+        }
+
+        if (waiting) {
+            const t = setTimeout(() => {
+                setWaiting(false);
+                setErasing(true);
+            }, 1500);
+            return () => clearTimeout(t);
+        }
+
+        const current = messages[msgIdx % messages.length];
+
+        if (!erasing) {
+            if (charIdx < current.length) {
+                const t = setTimeout(() => setCharIdx((c) => c + 1), 50);
+                return () => clearTimeout(t);
+            } else {
+                setWaiting(true);
+            }
+        } else {
+            if (charIdx > 0) {
+                const t = setTimeout(() => setCharIdx((c) => c - 1), 30);
+                return () => clearTimeout(t);
+            } else {
+                setErasing(false);
+                setMsgIdx((i) => i + 1);
+            }
+        }
+    }, [active, charIdx, erasing, waiting, msgIdx, messages]);
+
+    useEffect(() => {
+        const current = messages[msgIdx % messages.length];
+        setDisplayText(current.slice(0, charIdx));
+    }, [charIdx, msgIdx, messages]);
+
+    return displayText;
 }
 
 function ProgressChecklistItem({
