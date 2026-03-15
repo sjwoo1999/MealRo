@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, Bell } from 'lucide-react';
+import ToggleSwitch from '@/components/ui/ToggleSwitch';
 
 export default function NotificationsPage() {
     const [settings, setSettings] = useState({
@@ -37,12 +38,7 @@ export default function NotificationsPage() {
                             <h3 className="font-medium">식사 기록 알림</h3>
                             <p className="text-xs text-slate-500 mt-1">아침, 점심, 저녁 시간에 기록 알림을 받습니다.</p>
                         </div>
-                        <button
-                            onClick={() => toggle('mealReminder')}
-                            className={`w-11 h-6 rounded-full transition-colors relative ${settings.mealReminder ? 'bg-emerald-500' : 'bg-slate-300'}`}
-                        >
-                            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${settings.mealReminder ? 'left-6' : 'left-1'}`} />
-                        </button>
+                        <ToggleSwitch checked={settings.mealReminder} onChange={() => toggle('mealReminder')} label="식사 기록 알림" />
                     </div>
 
                     {/* Water Reminder */}
@@ -51,12 +47,7 @@ export default function NotificationsPage() {
                             <h3 className="font-medium">물 마시기 알림</h3>
                             <p className="text-xs text-slate-500 mt-1">2시간 간격으로 수분 섭취를 권장합니다.</p>
                         </div>
-                        <button
-                            onClick={() => toggle('waterReminder')}
-                            className={`w-11 h-6 rounded-full transition-colors relative ${settings.waterReminder ? 'bg-emerald-500' : 'bg-slate-300'}`}
-                        >
-                            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${settings.waterReminder ? 'left-6' : 'left-1'}`} />
-                        </button>
+                        <ToggleSwitch checked={settings.waterReminder} onChange={() => toggle('waterReminder')} label="물 마시기 알림" />
                     </div>
 
                     {/* Weekly Report */}
@@ -65,12 +56,7 @@ export default function NotificationsPage() {
                             <h3 className="font-medium">주간 리포트</h3>
                             <p className="text-xs text-slate-500 mt-1">매주 일요일 지난 주의 식단 요약을 받습니다.</p>
                         </div>
-                        <button
-                            onClick={() => toggle('weeklyReport')}
-                            className={`w-11 h-6 rounded-full transition-colors relative ${settings.weeklyReport ? 'bg-emerald-500' : 'bg-slate-300'}`}
-                        >
-                            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${settings.weeklyReport ? 'left-6' : 'left-1'}`} />
-                        </button>
+                        <ToggleSwitch checked={settings.weeklyReport} onChange={() => toggle('weeklyReport')} label="주간 리포트" />
                     </div>
                 </section>
 
@@ -85,12 +71,7 @@ export default function NotificationsPage() {
                             <h3 className="font-medium">이벤트 및 혜택 알림</h3>
                             <p className="text-xs text-slate-500 mt-1">서비스 관련 프로모션 정보를 수신합니다.</p>
                         </div>
-                        <button
-                            onClick={() => toggle('marketing')}
-                            className={`w-11 h-6 rounded-full transition-colors relative ${settings.marketing ? 'bg-emerald-500' : 'bg-slate-300'}`}
-                        >
-                            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${settings.marketing ? 'left-6' : 'left-1'}`} />
-                        </button>
+                        <ToggleSwitch checked={settings.marketing} onChange={() => toggle('marketing')} label="이벤트 및 혜택 알림" />
                     </div>
                 </section>
 
