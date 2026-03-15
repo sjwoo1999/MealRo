@@ -425,8 +425,8 @@ const PlannerForm = () => {
                 </div>
 
                 <div className="mt-5">
-                    <Button fullWidth size="lg" disabled={!selectedMenu} onClick={handleAnalyze} rightIcon={<ChevronRight className="h-4 w-4" />}>
-                        추천 계산하기
+                    <Button fullWidth size="lg" disabled={true} onClick={handleAnalyze} rightIcon={<ChevronRight className="h-4 w-4" />}>
+                        추천 계산하기 (준비 중)
                     </Button>
                 </div>
             </Card>

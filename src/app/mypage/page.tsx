@@ -59,6 +59,7 @@ export default function MyPage() {
                             href="/mypage/goals"
                             title="목표 설정 보기"
                             description="현재 목표와 활동량 설정 화면으로 이동합니다."
+                            disabled
                         />
                         <ActionLink
                             href="/mypage/connections"
@@ -102,11 +103,26 @@ function ActionLink({
     href,
     title,
     description,
+    disabled = false,
 }: {
     href: string;
     title: string;
     description: string;
+    disabled?: boolean;
 }) {
+    if (disabled) {
+        return (
+            <div className="block cursor-not-allowed rounded-[20px] border border-black bg-slate-50 p-4 opacity-40 pointer-events-none">
+                <div className="flex items-start justify-between gap-3">
+                    <div>
+                        <p className="font-semibold text-slate-900">{title}</p>
+                        <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
+                    </div>
+                    <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-slate-500" />
+                </div>
+            </div>
+        );
+    }
     return (
         <Link href={href} className="block rounded-[20px] border border-black bg-slate-50 p-4 transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2">
             <div className="flex items-start justify-between gap-3">
