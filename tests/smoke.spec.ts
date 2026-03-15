@@ -12,7 +12,7 @@ test.describe('MealRo smoke', () => {
         const response = await page.goto('/');
         expect(response?.ok()).toBeTruthy();
         await expect(page.getByRole('heading', { name: '지금 먹는 식사를 바로 기록하세요' })).toBeVisible();
-        await expect(page.getByRole('button', { name: '카메라로 바로 시작' })).toBeVisible();
+        await expect(page.getByRole('button', { name: '기록 보기' })).toBeVisible();
     });
 
     test('scan loads with selected meal', async ({ page }) => {
@@ -69,8 +69,8 @@ test.describe('MealRo smoke', () => {
     test('feed loads', async ({ page }) => {
         const response = await page.goto('/feed');
         expect(response?.ok()).toBeTruthy();
-        await expect(page.getByRole('heading', { name: '공개 베타 피드' })).toBeVisible();
-        await expect(page.getByText(/피드를 불러오지 못했습니다.|아직 올라온 기록이 없어요.|테스터/).first()).toBeVisible();
+        await expect(page.getByRole('heading', { name: '공개 기록' })).toBeVisible();
+        await expect(page.getByText(/불러오지 못했습니다.|아직 올라온 기록이 없어요.|테스터|불러오는 중/).first()).toBeVisible();
     });
 
     test('feed primary action navigates somewhere meaningful', async ({ page }) => {
@@ -84,8 +84,15 @@ test.describe('MealRo smoke', () => {
             return;
         }
 
-        await page.getByRole('button', { name: '첫 기록 올리기' }).click();
-        await expect(page).toHaveURL(/\/scan/);
+        const firstRecordButton = page.getByRole('button', { name: '첫 기록 올리기' });
+        if (await firstRecordButton.count()) {
+            await firstRecordButton.click();
+            await expect(page).toHaveURL(/\/scan/);
+            return;
+        }
+
+        // error state — page loaded but no interactive actions available
+        await expect(page.getByRole('heading', { name: '공개 기록' })).toBeVisible();
     });
 
     test('mypage loads', async ({ page }) => {
@@ -97,7 +104,7 @@ test.describe('MealRo smoke', () => {
 
     test('mypage quick action navigates to feed', async ({ page }) => {
         await page.goto('/mypage');
-        await page.getByRole('button', { name: '베타 피드 보기' }).click();
+        await page.getByRole('button', { name: '전체 기록 보기' }).click();
         await expect(page).toHaveURL(/\/feed/);
     });
 

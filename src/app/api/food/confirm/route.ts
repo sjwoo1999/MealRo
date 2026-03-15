@@ -211,8 +211,9 @@ export async function POST(request: NextRequest) {
 
         // 2. Insert into Public Feed (Optional & Sanitized)
         if (include_in_public_feed && supabaseAdmin) {
-            const kstDate = new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" });
-            const dayKey = new Date(kstDate).toISOString().split('T')[0]; // YYYY-MM-DD
+            const now = new Date();
+            const kstOffset = 9 * 60 * 60 * 1000;
+            const dayKey = new Date(now.getTime() + kstOffset).toISOString().split('T')[0]; // YYYY-MM-DD
 
             // Filter & Sanitize
             const validPublicEvents = foods
@@ -220,7 +221,7 @@ export async function POST(request: NextRequest) {
                 .map(food => ({
                     day_key: dayKey,
                     // Determine meal type based on hour (simple heuristic for demo)
-                    meal_type: getMealType(new Date(kstDate).getHours()),
+                    meal_type: getMealType(new Date(now.getTime() + kstOffset).getUTCHours()),
                     food_name: food.food_name.trim().substring(0, 60),
                     food_category: (food.tags?.[0] || '').trim().substring(0, 40) || null,
                     confidence: Math.min(Math.max(food.confidence, 0), 1), // Clamp 0-1
