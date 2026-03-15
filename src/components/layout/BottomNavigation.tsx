@@ -18,11 +18,9 @@ export default function BottomNavigation() {
             <div className="mx-auto max-w-md px-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
                 <div className="rounded-2xl border border-line bg-white/88 px-2 py-2 shadow-sm backdrop-blur-xl">
                     <div className="grid grid-cols-5 items-center gap-1">
-                        <NavLink pathname={pathname} item={{ href: '/', label: '홈', match: 'exact' }} />
-                        <NavLink pathname={pathname} item={{ href: '/insights', label: '분석', match: 'prefix' }} />
-                        <NavLink pathname={pathname} item={{ href: '/scan', label: '기록', match: 'prefix' }} isFab />
-                        <NavLink pathname={pathname} item={{ href: '/meal', label: '추천', match: 'prefix' }} />
-                        <NavLink pathname={pathname} item={{ href: '/mypage', label: '마이', match: 'prefix' }} />
+                        {PRIMARY_NAV_ITEMS.map((item) => (
+                            <NavLink key={item.href} pathname={pathname} item={item} isFab={item.href === '/scan'} />
+                        ))}
                     </div>
                 </div>
             </div>
@@ -40,6 +38,18 @@ function NavLink({
     isFab?: boolean;
 }) {
     const active = isActivePath(pathname, item);
+
+    if (item.comingSoon) {
+        return (
+            <span
+                className="flex min-h-[52px] cursor-not-allowed flex-col items-center justify-center gap-1 rounded-xl px-2 text-center text-copy-subtle/40"
+            >
+                {getIcon(item.href)}
+                <span className="text-[11px] font-medium">{item.mobileLabel ?? item.label}</span>
+                <span className="text-[10px] text-copy-subtle/40">준비 중</span>
+            </span>
+        );
+    }
 
     return (
         <Link

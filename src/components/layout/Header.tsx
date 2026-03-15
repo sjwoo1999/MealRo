@@ -44,6 +44,17 @@ export default function Header() {
                     <nav className="hidden items-center gap-2 lg:flex">
                         {desktopItems.map((item) => {
                             const isActive = isActivePath(pathname, item);
+                            if (item.comingSoon) {
+                                return (
+                                    <span
+                                        key={item.href}
+                                        className="cursor-not-allowed rounded-full px-4 py-2 text-sm font-medium text-slate-400"
+                                        title="준비 중"
+                                    >
+                                        {item.label}
+                                    </span>
+                                );
+                            }
                             return (
                                 <Link
                                     key={item.href}

@@ -4,6 +4,7 @@ export type NavigationItem = {
     mobileLabel?: string;
     match?: 'exact' | 'prefix';
     showInDesktop?: boolean;
+    comingSoon?: boolean;
 };
 
 export const PRIMARY_NAV_ITEMS: NavigationItem[] = [
