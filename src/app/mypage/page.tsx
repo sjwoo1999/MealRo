@@ -84,6 +84,7 @@ export default function MyPage() {
                             variant="outline"
                             leftIcon={<RefreshCcw className="h-4 w-4" />}
                             onClick={() => {
+                                if (!window.confirm('테스터 ID를 초기화하면 기존 기록이 연결되지 않습니다. 계속할까요?')) return;
                                 clearAnonymousUserId();
                                 window.location.reload();
                             }}
@@ -107,7 +108,7 @@ function ActionLink({
     description: string;
 }) {
     return (
-        <Link href={href} className="block rounded-[20px] border border-black bg-slate-50 p-4 transition-colors hover:bg-white">
+        <Link href={href} className="block rounded-[20px] border border-black bg-slate-50 p-4 transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2">
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <p className="font-semibold text-slate-900">{title}</p>

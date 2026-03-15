@@ -53,7 +53,7 @@ export default async function ItemPage({ params }: ItemPageProps) {
             {/* Item Header */}
             <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 mb-6">
                 <div className="flex items-start justify-between gap-4 mb-4">
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white break-keep">
                         {item.name}
                     </h1>
                     <GradeBadge grade={grade} size="lg" showLabel />
@@ -80,7 +80,7 @@ export default async function ItemPage({ params }: ItemPageProps) {
             {/* Nutrition Info */}
             {nutrition && (
                 <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 mb-6">
-                    <h2 className="font-semibold text-slate-900 dark:text-white mb-4">
+                    <h2 className="font-semibold text-slate-900 dark:text-white mb-4 break-keep">
                         영양 정보 (100g 기준)
                     </h2>
 
@@ -100,7 +100,7 @@ export default async function ItemPage({ params }: ItemPageProps) {
 
             {/* External Link CTA */}
             <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
-                <h2 className="font-semibold text-slate-900 dark:text-white mb-4">
+                <h2 className="font-semibold text-slate-900 dark:text-white mb-4 break-keep">
                     구매하기
                 </h2>
 

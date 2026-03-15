@@ -15,7 +15,7 @@ export default function HomePage() {
                 <section className="ui-card rounded-3xl border-none p-6 shadow-md bg-surface ring-1 ring-line">
                     <div className="flex items-start justify-between gap-4">
                         <div>
-                            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-copy">
+                            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-copy break-keep">
                                 지금 먹는 식사를 바로 기록하세요
                             </h1>
                             <p className="mt-2 text-sm text-copy-subtle">
