@@ -1,14 +1,10 @@
-import { PageShell } from '@/components/common';
-import PlannerForm from '@/components/planner/PlannerForm';
+import ComingSoonPage from '@/components/common/ComingSoonPage';
 
 export default function MealPage() {
     return (
-        <PageShell
+        <ComingSoonPage
             title="추천"
-            description="기준 메뉴 하나를 고르면 남은 끼니 조합을 바로 계산합니다."
-            width="narrow"
-        >
-            <PlannerForm />
-        </PageShell>
+            features={['AI 맞춤 메뉴 추천', '남은 영양소 기반 제안', '근처 식당 연계 추천']}
+        />
     );
 }
