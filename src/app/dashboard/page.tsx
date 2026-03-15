@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { MealPlanRecord } from '@/types/planner';
 import { useOnboardingCheck } from '@/hooks/useOnboardingCheck';
 import CalorieProgress from '@/components/dashboard/CalorieProgress';
 import MacroCard from '@/components/dashboard/MacroCard';
@@ -10,8 +11,9 @@ import { Suspense } from 'react';
 
 function DashboardContent() {
     const { profile, isOnboarded, isLoading: authLoading } = useOnboardingCheck({ redirectIfNotOnboarded: true });
-    const [history, setHistory] = useState<any[]>([]);
+    const [history, setHistory] = useState<MealPlanRecord[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [tab, setTab] = useState<'nutrition' | 'history'>('nutrition');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -61,31 +63,52 @@ function DashboardContent() {
 
     return (
         <div className="max-w-2xl mx-auto px-4 py-6 pb-20">
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 break-keep">
                 안녕하세요, {profile?.gender === 'male' ? '남성' : '여성'} 회원님 👋
             </h1>
 
-            <div className="mb-6">
-                <CalorieProgress
-                    current={currentCalories}
-                    target={profile?.target_calories || 2000}
-                    goalType={profile?.goal || undefined}
-                />
+            <div className="flex border-b border-slate-200 dark:border-slate-700 mb-6">
+                <button
+                    onClick={() => setTab('nutrition')}
+                    className={`flex-1 pb-2 text-sm font-semibold transition-colors ${tab === 'nutrition' ? 'border-b-2 border-slate-900 text-slate-900 dark:border-white dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                    오늘 영양
+                </button>
+                <button
+                    onClick={() => setTab('history')}
+                    className={`flex-1 pb-2 text-sm font-semibold transition-colors ${tab === 'history' ? 'border-b-2 border-slate-900 text-slate-900 dark:border-white dark:text-white' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                    식단 기록
+                </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-3 mb-8">
-                <MacroCard label="탄수화물" current={currentCarbs} target={profile?.target_carbs || 300} color="bg-blue-500" />
-                <MacroCard label="단백질" current={currentProtein} target={profile?.target_protein || 100} color="bg-red-500" />
-                <MacroCard label="지방" current={currentFat} target={profile?.target_fat || 60} color="bg-amber-500" />
-            </div>
+            {tab === 'nutrition' && (
+                <>
+                    <div className="mb-6">
+                        <CalorieProgress
+                            current={currentCalories}
+                            target={profile?.target_calories || 2000}
+                            goalType={profile?.goal || undefined}
+                        />
+                    </div>
 
-            <div className="space-y-4">
-                <div className="flex justify-between items-end">
-                    <h3 className="font-bold text-lg text-slate-900 dark:text-white">최근 식단 기록</h3>
-                    <a href="/meal/history" className="text-xs text-slate-400 hover:text-primary-500">전체보기</a>
+                    <div className="grid grid-cols-3 gap-3">
+                        <MacroCard label="탄수화물" current={currentCarbs} target={profile?.target_carbs || 300} color="bg-blue-500" />
+                        <MacroCard label="단백질" current={currentProtein} target={profile?.target_protein || 100} color="bg-red-500" />
+                        <MacroCard label="지방" current={currentFat} target={profile?.target_fat || 60} color="bg-amber-500" />
+                    </div>
+                </>
+            )}
+
+            {tab === 'history' && (
+                <div className="space-y-4">
+                    <div className="flex justify-between items-end">
+                        <h3 className="font-bold text-lg text-slate-900 dark:text-white break-keep">최근 식단 기록</h3>
+                        <a href="/meal/history" className="text-xs text-slate-400 hover:text-primary-500">전체보기</a>
+                    </div>
+                    <MealLogList logs={history.slice(0, 3)} />
                 </div>
-                <MealLogList logs={history.slice(0, 3)} />
-            </div>
+            )}
         </div>
     );
 }

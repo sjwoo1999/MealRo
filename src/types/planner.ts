@@ -70,6 +70,18 @@ export interface ReversePlanResult {
     accuracy: number;  // 목표 대비 정확도 (0~100%)
 }
 
+// meal_plans 테이블 레코드 (planner history)
+export interface MealPlanRecord {
+    id: string;
+    anonymous_user_id: string;
+    meal_type: string;
+    total_calories: number;
+    total_protein: number;
+    total_carbs: number;
+    total_fat: number;
+    created_at: string;
+}
+
 // 역추산 입력 타입
 export interface ReversePlanInput {
     selectedMenu: SelectedMenu;
