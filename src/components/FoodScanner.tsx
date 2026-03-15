@@ -281,8 +281,8 @@ export default function FoodScanner({
                     if (onSave) onSave(analyzedData);
                 } catch (dbError) {
                     console.error(dbError);
-                    setMessage(e.message || "기록 저장에 실패했습니다.");
-                    setSaveDiagnostic(`기록 저장에 실패했습니다. 원인: ${e.message || '알 수 없는 오류'}`);
+                    setMessage("저장에 실패했습니다. 다시 시도해 주세요.");
+                    setSaveDiagnostic(null);
                 }
             } finally {
                 setIsSaving(false);
@@ -338,8 +338,17 @@ export default function FoodScanner({
             }
         } catch (e: any) {
             console.error(e);
-            setMessage(e.message || "기록 저장에 실패했습니다.");
-            setSaveDiagnostic(`기록 저장에 실패했습니다. 원인: ${e.message || '알 수 없는 오류'}`);
+            try {
+                await saveMealToDexie(analyzedData, '', false);
+                setMessage("기기에 저장됨 (서버 연결 실패)");
+                setDidPersist(true);
+                setSaveState('fallback');
+                setSaveDiagnostic(`서버 연결 실패로 이 기기에 저장했습니다. 원인: ${e.message || '알 수 없는 오류'}`);
+                if (onSave) onSave(analyzedData);
+            } catch (dbError) {
+                setMessage("저장에 실패했습니다. 다시 시도해 주세요.");
+                setSaveDiagnostic(null);
+            }
         } finally {
             setIsSaving(false);
         }
@@ -525,11 +534,11 @@ export default function FoodScanner({
                             {didPersist && (
                                 <Card padding="lg" className="border border-black shadow-none">
                                     <SuccessStateCard
-                                        tone={saveState === 'success' ? 'success' : 'muted'}
-                                        title={saveState === 'success' ? '기록이 저장되었습니다' : '이 기기에 기록을 남겼습니다'}
+                                        tone={saveState === 'success' ? 'success' : 'warning'}
+                                        title={saveState === 'success' ? '기록이 저장되었습니다' : '기기에 저장됨 (서버 연결 실패)'}
                                         description={saveState === 'success'
                                             ? '기록은 저장되었습니다. 지금은 기록 확인이나 다시 기록만 해도 충분합니다.'
-                                            : '인터넷 상태에 따라 전체 목록 반영이 늦을 수 있어, 우선 이 기기에 기록을 남겨뒀습니다.'}
+                                            : '나중에 자동으로 동기화됩니다. 연결이 복구되면 전체 목록에 반영됩니다.'}
                                     />
                                     {saveDiagnostic && saveState !== 'success' && (
                                         <div className="mt-3">
