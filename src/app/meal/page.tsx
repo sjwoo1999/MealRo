@@ -1,5 +1,10 @@
 import PlannerForm from '@/components/planner/PlannerForm';
+import AuthGuard from '@/components/auth/AuthGuard';
 
 export default function MealPage() {
-    return <PlannerForm />;
+    return (
+        <AuthGuard>
+            <PlannerForm />
+        </AuthGuard>
+    );
 }

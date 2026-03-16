@@ -3,6 +3,7 @@ import Link from 'next/link';
 import FoodScanner from '@/components/FoodScanner';
 import { Card, PageShell } from '@/components/common';
 import { MEAL_CONTEXT, type MealContextKey } from '@/lib/mvp-flow';
+import AuthGuard from '@/components/auth/AuthGuard';
 
 export const metadata: Metadata = {
     title: '음식 스캔 - MealRo',
@@ -20,6 +21,7 @@ export default function ScanPage({ searchParams }: ScanPageProps) {
     const activeMeal = mealKey && MEAL_CONTEXT[mealKey] ? MEAL_CONTEXT[mealKey] : null;
 
     return (
+        <AuthGuard>
         <PageShell width="wide" className="py-4 lg:py-6">
             <div className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -56,5 +58,6 @@ export default function ScanPage({ searchParams }: ScanPageProps) {
                 </section>
             </div>
         </PageShell>
+        </AuthGuard>
     );
 }
