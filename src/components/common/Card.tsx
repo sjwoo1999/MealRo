@@ -21,7 +21,7 @@ const Card = ({
         none: 'p-0',
         sm: 'p-3',
         md: 'p-4',
-        lg: 'p-6',
+        lg: 'p-8',
     };
 
     const hoverClass = hover

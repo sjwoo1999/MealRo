@@ -30,7 +30,7 @@ export default function PageShell({
     width = 'narrow',
 }: PageShellProps) {
     return (
-        <section className={`mx-auto w-full px-4 py-6 pb-24 lg:px-6 lg:py-8 lg:pb-10 ${widthClasses[width]} ${className}`}>
+        <section className={`mx-auto w-full px-4 py-8 pb-24 lg:px-6 lg:pb-10 ${widthClasses[width]} ${className}`}>
             {(title || description || actions) && (
                 <header className="mb-6 flex flex-col gap-3 lg:mb-8 lg:flex-row lg:items-end lg:justify-between">
                     <div className="min-w-0">
@@ -49,7 +49,7 @@ export default function PageShell({
                 </header>
             )}
 
-            <div className={`space-y-6 lg:space-y-8 ${contentClassName}`}>
+            <div className={`space-y-8 ${contentClassName}`}>
                 {children}
             </div>
         </section>
