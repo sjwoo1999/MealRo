@@ -19,9 +19,9 @@ const RecommendStatusBanner = () => {
     }
 
     return (
-        <div className="rounded-[24px] border border-black bg-slate-50 p-5">
-            <p className="text-sm font-semibold text-slate-900">개인화 추천 기준 활성화</p>
-            <p className="mt-1 text-sm leading-6 text-slate-500">
+        <div className="rounded-[24px] border border-line-strong bg-surface-muted p-5">
+            <p className="text-sm font-semibold text-copy">개인화 추천 기준 활성화</p>
+            <p className="mt-1 text-sm leading-6 text-copy-subtle">
                 온보딩 정보 기준으로 오늘의 목표 칼로리와 영양 비율을 반영해 추천합니다.
             </p>
         </div>
@@ -40,15 +40,15 @@ function Banner({
     ctaLabel: string;
 }) {
     return (
-        <div className="rounded-[24px] border border-black bg-slate-50 p-5">
+        <div className="rounded-[24px] border border-line-strong bg-surface-muted p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <p className="text-sm font-semibold text-slate-900">{title}</p>
-                    <p className="mt-1 text-sm leading-6 text-slate-500">{description}</p>
+                    <p className="text-sm font-semibold text-copy">{title}</p>
+                    <p className="mt-1 text-sm leading-6 text-copy-subtle">{description}</p>
                 </div>
                 <Link
                     href={ctaHref}
-                    className="inline-flex items-center justify-center rounded-full border border-black bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition-colors hover:bg-slate-100"
+                    className="inline-flex items-center justify-center rounded-full border border-line-strong bg-surface px-4 py-2 text-sm font-semibold text-copy transition-colors hover:bg-surface-muted"
                 >
                     {ctaLabel}
                 </Link>

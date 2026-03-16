@@ -65,28 +65,41 @@ export async function findMenusByCalorieRange(
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    // MVP: 모든 메뉴를 가져와서 메모리 필터링? (데이터 적으면 가능)
-    // 데이터 많으면 Range 쿼리 필요.
-    // 하지만 nutrition_group_avg와 조인해야 칼로리를 알 수 있음.
-    // DB 구조상 menu_items는 영양정보가 없고 nutrition_group_avg에만 있음.
-    // 따라서 join query가 필요함.
-
-    const { data, error } = await supabase
+    // App-side join: FK가 DB에 없으므로 search route와 동일한 패턴 사용
+    // 1. menu_items 조회
+    const { data: menuData, error: menuError } = await supabase
         .from('menu_items')
-        .select(`
-            *,
-            nutrition:nutrition_group_avg(*)
-        `)
-        // .in('category', categories) // If categories provided
-        // .not('id', 'in', `(${excludeIds.join(',')})`) // Supabase syntax tricky with dynamic array
+        .select('*')
         .limit(100);
 
-    if (error || !data) {
-        console.error("Error fetching menus", error);
+    if (menuError || !menuData) {
+        console.error("Error fetching menus", menuError);
         return [];
     }
 
-    let candidates = (data as unknown as MenuItemWithNutrition[]).filter(item => item.nutrition);
+    // 2. food_group 목록 추출 → nutrition_group_avg 조회
+    const foodGroups = Array.from(new Set(menuData.map((item: any) => item.food_group)));
+
+    const { data: nutritionData, error: nutritionError } = await supabase
+        .from('nutrition_group_avg')
+        .select('*')
+        .in('food_group', foodGroups);
+
+    if (nutritionError) {
+        console.error("Error fetching nutrition", nutritionError);
+        return [];
+    }
+
+    // 3. Map으로 merge
+    const nutritionMap = new Map();
+    (nutritionData || []).forEach((n: any) => nutritionMap.set(n.food_group, n));
+
+    const mergedData = menuData.map((item: any) => ({
+        ...item,
+        nutrition: nutritionMap.get(item.food_group) || null,
+    }));
+
+    let candidates = (mergedData as unknown as MenuItemWithNutrition[]).filter(item => item.nutrition);
 
     // Filter by Calorie Range (Assuming 1 serving = 3.5 * 100g unit as per matcher logic)
     // This heuristics consistency is critical.

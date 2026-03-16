@@ -28,7 +28,7 @@ const RecommendOptionCard = ({ plan, onSelect, isSelected = false }: RecommendOp
             type="button"
             onClick={onSelect}
             className={`w-full rounded-[24px] border p-5 text-left transition-colors ${
-                isSelected ? 'border-black bg-black text-white' : 'border-black bg-white text-slate-900'
+                isSelected ? 'border-black bg-black text-white' : 'border-line-strong bg-surface text-copy'
             }`}
         >
             <div className="flex items-start justify-between gap-4">
@@ -37,33 +37,28 @@ const RecommendOptionCard = ({ plan, onSelect, isSelected = false }: RecommendOp
                         <h3 className="text-lg font-semibold">
                             {plan.dietLabel}
                         </h3>
-                        {isSelected && (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-white/20 bg-white/10 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white">
-                                Selected
-                            </span>
-                        )}
                     </div>
-                    <p className={`mt-1 text-sm ${isSelected ? 'text-white/70' : 'text-slate-600'}`}>{DIET_LABEL[plan.dietType]}</p>
+                    <p className={`mt-1 text-sm ${isSelected ? 'text-white/70' : 'text-copy-muted'}`}>{DIET_LABEL[plan.dietType]}</p>
                 </div>
                 <div className="text-right">
                     <p className="text-sm font-semibold">{plan.accuracy}% 일치</p>
-                    <p className={`mt-1 text-xs ${isSelected ? 'text-white/70' : 'text-slate-500'}`}>총 {plan.dailyTotal.calories} kcal</p>
+                    <p className={`mt-1 text-xs ${isSelected ? 'text-white/70' : 'text-copy-subtle'}`}>총 {plan.dailyTotal.calories} kcal</p>
                 </div>
             </div>
 
-            <div className="mt-4 space-y-3">
+            <div className="mt-5 space-y-4">
                 {plan.recommendations.map((recommendation) => (
                     <div
                         key={recommendation.mealSlot}
-                        className={`rounded-[18px] border p-4 ${isSelected ? 'border-white/20 bg-white/10' : 'border-black bg-slate-50'}`}
+                        className={`rounded-[18px] border p-4 ${isSelected ? 'border-white/20 bg-white/10' : 'border-line-strong bg-surface'}`}
                     >
                         <div className="flex items-start justify-between gap-3">
                             <div>
-                                <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isSelected ? 'text-white/70' : 'text-slate-500'}`}>
+                                <p className={`text-xs font-semibold uppercase tracking-[0.18em] ${isSelected ? 'text-white/70' : 'text-copy-subtle'}`}>
                                     {SLOT_LABELS[recommendation.mealSlot]}
                                 </p>
                                 <p className="mt-1 font-medium">{recommendation.menu.name}</p>
-                                <p className={`mt-2 text-xs ${isSelected ? 'text-white/70' : 'text-slate-500'}`}>
+                                <p className={`mt-2 text-xs ${isSelected ? 'text-white/70' : 'text-copy-subtle'}`}>
                                     목표 {recommendation.targetCalories} kcal 대비 {recommendation.caloriesDiff > 0 ? '+' : ''}{recommendation.caloriesDiff} kcal
                                 </p>
                             </div>
@@ -73,10 +68,10 @@ const RecommendOptionCard = ({ plan, onSelect, isSelected = false }: RecommendOp
                 ))}
             </div>
 
-            <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
-                <MiniMetric label="탄수" value={`${plan.dailyTotal.carbs}g`} />
-                <MiniMetric label="단백질" value={`${plan.dailyTotal.protein}g`} />
-                <MiniMetric label="지방" value={`${plan.dailyTotal.fat}g`} />
+            <div className="mt-5 grid grid-cols-3 gap-2 text-xs">
+                <MiniMetric label="탄수" value={`${plan.dailyTotal.carbs}g`} isSelected={isSelected} />
+                <MiniMetric label="단백질" value={`${plan.dailyTotal.protein}g`} isSelected={isSelected} />
+                <MiniMetric label="지방" value={`${plan.dailyTotal.fat}g`} isSelected={isSelected} />
             </div>
 
             {isSelected && (
@@ -92,12 +87,14 @@ const RecommendOptionCard = ({ plan, onSelect, isSelected = false }: RecommendOp
 function MiniMetric({
     label,
     value,
+    isSelected,
 }: {
     label: string;
     value: string;
+    isSelected: boolean;
 }) {
     return (
-        <div className="rounded-[16px] border border-current/10 px-3 py-2">
+        <div className={`rounded-[16px] border px-3 py-2 ${isSelected ? 'border-white/20 bg-white/10' : 'border-line bg-surface-muted'}`}>
             <p className="opacity-70">{label}</p>
             <p className="mt-1 font-semibold">{value}</p>
         </div>

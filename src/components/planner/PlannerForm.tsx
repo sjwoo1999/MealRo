@@ -176,15 +176,15 @@ const PlannerForm = () => {
 
     if (step === 3 && selectedPlan && selectedMenu) {
         return (
-            <div className="space-y-5 pb-28 animate-fade-in-up">
+            <div className="space-y-8 pb-28 animate-fade-in-up">
                 <Card padding="lg">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Step 04</p>
-                    <h2 className="mt-2 text-2xl font-semibold text-slate-900">추천안이 준비됐습니다</h2>
-                    <p className="mt-2 text-sm leading-6 text-slate-500">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-copy-subtle">Results</p>
+                    <h2 className="mt-2 text-2xl font-semibold text-copy">추천안이 준비됐습니다</h2>
+                    <p className="mt-2 text-sm leading-6 text-copy-subtle">
                         기준 메뉴를 바탕으로 남은 끼니 조합을 계산했습니다.
                     </p>
 
-                    <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                    <div className="mt-6 grid gap-4 sm:grid-cols-3">
                         <InfoTile label="기준 끼니" value={SLOT_LABELS[selectedMenu.mealSlot]} />
                         <InfoTile label="기준 메뉴" value={selectedMenu.name} />
                         <InfoTile label="선택안" value={selectedPlan.dietLabel} />
@@ -196,10 +196,10 @@ const PlannerForm = () => {
                 <Card padding="lg">
                     <div className="flex items-end justify-between gap-3">
                         <div>
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Choose Plan</p>
-                            <h3 className="mt-2 text-xl font-semibold text-slate-900">추천안 선택</h3>
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-copy-subtle">Choose Plan</p>
+                            <h3 className="mt-2 text-xl font-semibold text-copy">추천안 선택</h3>
                         </div>
-                        <span className="rounded-full border border-black px-3 py-1 text-xs font-semibold text-slate-700">
+                        <span className="rounded-full border border-line-strong px-3 py-1 text-xs font-semibold text-copy-muted">
                             {plans.length} options
                         </span>
                     </div>
@@ -219,7 +219,7 @@ const PlannerForm = () => {
                 <NutritionSummary current={selectedPlan.dailyTotal} target={selectedPlan.targetTotal} />
 
                 <Card padding="lg">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Selected Flow</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-copy-subtle">Selected Flow</p>
                     <div className="mt-4 space-y-3">
                         <FlowRow
                             label={`${SLOT_LABELS[selectedMenu.mealSlot]} 기준`}
@@ -241,9 +241,9 @@ const PlannerForm = () => {
                 <Card padding="lg">
                     <div className="flex items-end justify-between gap-3">
                         <div>
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Explore Preview</p>
-                            <h3 className="mt-2 text-xl font-semibold text-slate-900">추천안과 같이 볼 주변 후보</h3>
-                            <p className="mt-2 text-sm leading-6 text-slate-500">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-copy-subtle">Explore Preview</p>
+                            <h3 className="mt-2 text-xl font-semibold text-copy">추천안과 같이 볼 주변 후보</h3>
+                            <p className="mt-2 text-sm leading-6 text-copy-subtle">
                                 거리, 영업시간, 가격대를 먼저 보고 탐색으로 넘어갈 수 있습니다.
                             </p>
                         </div>
@@ -256,18 +256,18 @@ const PlannerForm = () => {
 
                     <div className="mt-5 space-y-3">
                         {exploreCandidates.map((candidate) => (
-                            <div key={candidate.id} className="rounded-[20px] border border-black bg-slate-50 p-4">
+                            <div key={candidate.id} className="rounded-[20px] border border-line-strong bg-surface p-4">
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0 flex-1">
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <p className="font-semibold text-slate-900">{candidate.name}</p>
-                                            <span className="rounded-full border border-black bg-white px-2 py-1 text-[11px] font-semibold text-slate-600">
+                                            <p className="font-semibold text-copy">{candidate.name}</p>
+                                            <span className="rounded-full border border-line-strong bg-surface px-2 py-1 text-[11px] font-semibold text-copy-muted">
                                                 {candidate.category || '음식점'}
                                             </span>
                                         </div>
-                                        <p className="mt-2 text-sm text-slate-500">{candidate.recommendationReason}</p>
+                                        <p className="mt-2 text-sm text-copy-subtle">{candidate.recommendationReason}</p>
                                     </div>
-                                    <span className="shrink-0 rounded-full border border-black bg-white px-3 py-1 text-xs font-semibold text-slate-700">
+                                    <span className="shrink-0 rounded-full border border-line-strong bg-surface px-3 py-1 text-xs font-semibold text-copy-muted">
                                         {candidate.distance !== undefined ? `${candidate.distance.toFixed(1)}km` : '근처'}
                                     </span>
                                 </div>
@@ -294,7 +294,7 @@ const PlannerForm = () => {
                                     {candidate.menuHighlights.slice(0, 2).map((menu) => (
                                         <span
                                             key={menu.name}
-                                            className="rounded-full border border-black bg-white px-3 py-1 text-xs font-semibold text-slate-700"
+                                            className="rounded-full border border-line-strong bg-surface px-3 py-1 text-xs font-semibold text-copy-muted"
                                         >
                                             {menu.name} · {menu.calories}kcal
                                         </span>
@@ -342,13 +342,13 @@ const PlannerForm = () => {
                 )}
 
                 <div className="grid gap-3 sm:grid-cols-3">
+                    <Button onClick={handleSave} leftIcon={<Save className="h-4 w-4" />} loading={isSaving}>
+                        저장하기
+                    </Button>
                     <Button variant="outline" onClick={handleReset} leftIcon={<RotateCcw className="h-4 w-4" />}>
                         다시 계산
                     </Button>
-                    <Button variant="outline" onClick={handleSave} leftIcon={<Save className="h-4 w-4" />} loading={isSaving}>
-                        저장하기
-                    </Button>
-                    <Button onClick={() => router.push('/nearby')} rightIcon={<MapPin className="h-4 w-4" />}>
+                    <Button variant="outline" onClick={() => router.push('/nearby')} rightIcon={<MapPin className="h-4 w-4" />}>
                         주변 탐색
                     </Button>
                 </div>
@@ -370,13 +370,13 @@ const PlannerForm = () => {
     }
 
     return (
-        <div className="space-y-5 animate-fade-in-up">
+        <div className="space-y-8 animate-fade-in-up">
             <RecommendStatusBanner />
 
             <Card padding="lg">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Step 01</p>
-                <h2 className="mt-2 text-2xl font-semibold text-slate-900">기준 끼니를 고르세요</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-500">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-copy-subtle">Step 01</p>
+                <h2 className="mt-2 text-2xl font-semibold text-copy">기준 끼니를 고르세요</h2>
+                <p className="mt-2 text-sm leading-6 text-copy-subtle">
                     한 끼를 기준으로 나머지 식사를 다시 계산합니다.
                 </p>
 
@@ -386,38 +386,38 @@ const PlannerForm = () => {
             </Card>
 
             <Card padding="lg">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Step 02</p>
-                <h3 className="mt-2 text-xl font-semibold text-slate-900">기준 메뉴를 검색하세요</h3>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-copy-subtle">Step 02</p>
+                <h3 className="mt-2 text-xl font-semibold text-copy">기준 메뉴를 검색하세요</h3>
 
                 <div className="mt-5">
                     <MenuSelector currentSlot={slot} onSelect={setSelectedMenu} />
                 </div>
 
                 {selectedMenu && (
-                    <div className="mt-5 rounded-[20px] border border-black bg-slate-50 p-4">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    <div className="mt-5 rounded-[20px] border border-line-strong bg-surface p-4">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-copy-subtle">
                             Current Meal
                         </p>
-                        <p className="mt-2 text-lg font-semibold text-slate-900">{selectedMenu.name}</p>
-                        <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
-                            <span className="rounded-full border border-black px-3 py-1">{SLOT_LABELS[slot]}</span>
-                            <span className="rounded-full border border-black px-3 py-1">{selectedMenu.calories} kcal</span>
-                            <span className="rounded-full border border-black px-3 py-1">탄수 {selectedMenu.carbs}g</span>
-                            <span className="rounded-full border border-black px-3 py-1">단백질 {selectedMenu.protein}g</span>
-                            <span className="rounded-full border border-black px-3 py-1">지방 {selectedMenu.fat}g</span>
+                        <p className="mt-2 text-lg font-semibold text-copy">{selectedMenu.name}</p>
+                        <div className="mt-3 flex flex-wrap gap-2 text-xs text-copy-muted">
+                            <span className="rounded-full border border-line-strong px-3 py-1">{SLOT_LABELS[slot]}</span>
+                            <span className="rounded-full border border-line-strong px-3 py-1">{selectedMenu.calories} kcal</span>
+                            <span className="rounded-full border border-line-strong px-3 py-1">탄수 {selectedMenu.carbs}g</span>
+                            <span className="rounded-full border border-line-strong px-3 py-1">단백질 {selectedMenu.protein}g</span>
+                            <span className="rounded-full border border-line-strong px-3 py-1">지방 {selectedMenu.fat}g</span>
                         </div>
                     </div>
                 )}
             </Card>
 
             <Card padding="lg">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Step 03</p>
-                <h3 className="mt-2 text-xl font-semibold text-slate-900">추천 계산</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-500">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-copy-subtle">Step 03</p>
+                <h3 className="mt-2 text-xl font-semibold text-copy">추천 계산</h3>
+                <p className="mt-2 text-sm leading-6 text-copy-subtle">
                     온보딩 정보가 있으면 개인 값으로, 없으면 기본 기준값으로 계산합니다.
                 </p>
 
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="mt-6 grid gap-4 sm:grid-cols-2">
                     <InfoTile label="목표 칼로리" value={`${effectiveProfile.target_calories} kcal`} />
                     <InfoTile label="목표 단백질" value={`${effectiveProfile.target_protein} g`} />
                     <InfoTile label="목표 탄수화물" value={`${effectiveProfile.target_carbs} g`} />

@@ -11,25 +11,23 @@ const MealSlotPicker = ({ value, onChange }: MealSlotPickerProps) => {
     return (
         <div className="grid grid-cols-3 gap-3 animate-fade-in-up">
             {[
-                { value: 'breakfast', label: '아침' },
-                { value: 'lunch', label: '점심' },
-                { value: 'dinner', label: '저녁' },
+                { value: 'breakfast', label: '아침', emoji: '🌅' },
+                { value: 'lunch', label: '점심', emoji: '☀️' },
+                { value: 'dinner', label: '저녁', emoji: '🌙' },
             ].map((option) => {
                 const isSelected = value === option.value;
                 return (
                     <button
                         type="button"
                         key={option.value}
-                        className={`ui-card flex min-h-24 flex-col items-center justify-center border p-4 text-center transition-colors ${
-                            isSelected ? 'bg-black text-white' : 'bg-white text-slate-900'
+                        className={`ui-card flex min-h-28 flex-col items-center justify-center border p-4 text-center transition-colors ${
+                            isSelected ? 'bg-black text-white' : 'bg-surface text-copy'
                         }`}
                         onClick={() => onChange(option.value as MealSlot)}
                     >
-                        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] opacity-60">
-                            Meal
-                        </span>
+                        <span className="text-xl">{option.emoji}</span>
                         <span className="mt-2 text-base font-semibold">{option.label}</span>
-                        <span className={`mt-2 text-[11px] uppercase tracking-[0.16em] ${isSelected ? 'text-white/70' : 'text-slate-500'}`}>
+                        <span className={`mt-2 text-[11px] uppercase tracking-[0.18em] ${isSelected ? 'text-white/70' : 'text-copy-subtle'}`}>
                             {isSelected ? 'Selected' : 'Choose'}
                         </span>
                     </button>
