@@ -1,7 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { mockAuthenticatedUser } from './helpers';
 
 test.describe('MealRo smoke', () => {
     test('home meal card navigates to scan', async ({ page }) => {
+        await mockAuthenticatedUser(page);
         await page.goto('/');
         await page.getByRole('link', { name: /점심/ }).click();
         await expect(page).toHaveURL(/\/scan\?meal=lunch/);
@@ -9,6 +11,7 @@ test.describe('MealRo smoke', () => {
     });
 
     test('home loads', async ({ page }) => {
+        await mockAuthenticatedUser(page);
         const response = await page.goto('/');
         expect(response?.ok()).toBeTruthy();
         await expect(page.getByRole('heading', { name: '지금 먹는 식사를 바로 기록하세요' })).toBeVisible();
@@ -16,6 +19,7 @@ test.describe('MealRo smoke', () => {
     });
 
     test('scan loads with selected meal', async ({ page }) => {
+        await mockAuthenticatedUser(page);
         const response = await page.goto('/scan?meal=lunch');
         expect(response?.ok()).toBeTruthy();
         await expect(page.getByRole('heading', { name: '점심 식사 기록' })).toBeVisible();
@@ -23,6 +27,7 @@ test.describe('MealRo smoke', () => {
     });
 
     test('scan meal switch updates page context', async ({ page }) => {
+        await mockAuthenticatedUser(page);
         await page.goto('/scan?meal=lunch');
         await page.getByRole('link', { name: /저녁/ }).click();
         await expect(page).toHaveURL(/\/scan\?meal=dinner/);
@@ -30,6 +35,7 @@ test.describe('MealRo smoke', () => {
     });
 
     test('meal planner loads', async ({ page }) => {
+        await mockAuthenticatedUser(page);
         const response = await page.goto('/meal');
         expect(response?.ok()).toBeTruthy();
         await expect(page.getByRole('heading', { name: '추천', exact: true })).toBeVisible();
@@ -37,6 +43,7 @@ test.describe('MealRo smoke', () => {
     });
 
     test('meal planner meal slot can be selected', async ({ page }) => {
+        await mockAuthenticatedUser(page);
         await page.goto('/meal');
         const breakfastButton = page.getByRole('button', { name: /아침/ });
         await breakfastButton.click();
@@ -109,6 +116,7 @@ test.describe('MealRo smoke', () => {
     });
 
     test('history archive loads', async ({ page }) => {
+        await mockAuthenticatedUser(page);
         const response = await page.goto('/history');
         expect(response?.ok()).toBeTruthy();
         await expect(page.getByRole('heading', { name: '기록 보관함' })).toBeVisible();
