@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
-import ClientOnboardingPage from './page.client';
+import AuthGuard from '@/components/auth/AuthGuard';
+import ProgressiveOnboarding from '@/components/onboarding/ProgressiveOnboarding';
 
 export const metadata: Metadata = {
     title: '시작하기 - MealRo',
@@ -7,5 +8,11 @@ export const metadata: Metadata = {
 };
 
 export default function OnboardingPage() {
-    return <ClientOnboardingPage />;
+    return (
+        <AuthGuard>
+            <div className="min-h-screen bg-white">
+                <ProgressiveOnboarding />
+            </div>
+        </AuthGuard>
+    );
 }
