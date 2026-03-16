@@ -6,9 +6,9 @@ interface SoftQuestionProps {
 
 export default function SoftQuestion({ onNext }: SoftQuestionProps) {
     const options = [
-        { id: 'diet', label: '체중 감량' },
-        { id: 'muscle', label: '근육량 증가' },
-        { id: 'health', label: '건강 관리' },
+        { id: 'lose', label: '체중 감량' },
+        { id: 'gain', label: '근육량 증가' },
+        { id: 'maintain', label: '건강 관리' },
     ];
 
     return (
